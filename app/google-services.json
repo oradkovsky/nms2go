@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "8385554458",
+    "project_id": "nms2go-36bbc",
+    "storage_bucket": "nms2go-36bbc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8385554458:android:c839c87b553d79d87a49a3",
+        "android_client_info": {
+          "package_name": "com.ror.nms2go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7lotCiy6iL_FhxffDkabFN29831siTi8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8385554458:android:ae6528190e69ed077a49a3",
+        "android_client_info": {
+          "package_name": "com.ror.nms2go.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7lotCiy6iL_FhxffDkabFN29831siTi8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

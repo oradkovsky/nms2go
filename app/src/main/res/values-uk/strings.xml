@@ -1,0 +1,132 @@
+<resources>
+    <string name="app_name">nms2go</string>
+    <string name="menu_open">Відкрити меню</string>
+    <string name="menu_overview">Огляд</string>
+    <string name="menu_configuration">Налаштування</string>
+    <string name="menu_orders">Надіслані Замовлення</string>
+    <string name="orders_title">Надіслані Замовлення</string>
+    <string name="orders_empty">Ще немає надісланих замовлень.</string>
+    <string name="orders_empty_hint">Замовлення, які ви надсилаєте з екрана перегляду, з\'являться тут.</string>
+    <string name="orders_count">%1$d замовлень</string>
+    <string name="orders_status_sent">Надіслано</string>
+    <string name="orders_status_failed">Не надіслано</string>
+    <string name="orders_row_to">Кому</string>
+    <string name="orders_row_items">%1$d товарів · %2$d одиниць</string>
+    <string name="order_detail_title">Деталі замовлення</string>
+    <string name="order_detail_missing">Це замовлення не знайдено.</string>
+    <string name="order_detail_sender">Відправник</string>
+    <string name="order_detail_receiver">Отримувач</string>
+    <string name="order_detail_subject">Тема</string>
+    <string name="order_detail_error">Помилка</string>
+    <string name="order_detail_summary">%1$d товарів · %2$d одиниць</string>
+    <string name="config_title">Налаштування</string>
+    <string name="config_add_title">Додати постачальника</string>
+    <string name="config_company_label">Назва компанії</string>
+    <string name="config_sender_label">Email відправника</string>
+    <string name="config_receiver_label">Email отримувача (необов\'язково)</string>
+    <string name="config_parser_label">Парсер Excel</string>
+    <string name="config_parser_auto">Автоматично (за назвою файлу)</string>
+    <string name="config_save_button">Зберегти</string>
+    <string name="config_edit_title">Редагувати постачальника</string>
+    <string name="config_row_sender">Відправник</string>
+    <string name="config_row_recipient">Отримувач</string>
+    <string name="overview_refresh">Оновити</string>
+    <string name="overview_order">Замовити</string>
+    <string name="order_empty">Ще немає листів із вкладеннями для замовлення. Спочатку оновіть огляд.</string>
+    <string name="overview_intro">Найновіший лист із вкладенням для кожного налаштованого відправника.</string>
+    <string name="overview_empty">Ще не налаштовано відправників. Додайте одного в Налаштуваннях.</string>
+    <string name="overview_empty_prefix">Ще не налаштовано відправників. Додайте в</string>
+    <string name="overview_loading_hint">Завантаження останніх листів…</string>
+    <string name="overview_no_subject">(без теми)</string>
+    <string name="overview_no_attachments">Не знайдено листа з вкладеннями.</string>
+    <string name="overview_no_messages">Немає листів від цього відправника.</string>
+    <string name="overview_tap_to_parse">Натисніть, щоб завантажити та розібрати прайс-лист</string>
+    <string name="parsed_title">Порівняти та замовити</string>
+    <string name="back">Назад</string>
+    <string name="parsed_summary">%1$s · %2$s · %3$d рядків</string>
+    <string name="parsed_empty">У цьому файлі не знайдено рядків.</string>
+    <string name="parsed_filter_hint">Фільтр за назвою</string>
+    <string name="parsed_filter_clear">Очистити фільтр</string>
+    <string name="parsed_page_info">%1$d результатів</string>
+    <string name="parsed_page_of">Сторінка %1$d із %2$d</string>
+    <string name="parsed_prev">Попередня</string>
+    <string name="parsed_next">Наступна</string>
+    <string name="parsed_close">Закрити</string>
+    <string name="parsed_qty_hint">0 = не в замовленні, 1+ = кількість замовлення</string>
+    <string name="parsed_loading">Завантаження...</string>
+    <string name="parsed_loading_progress">Завантажено %1$d/%2$d постачальників, завантаження...</string>
+    <string name="parsed_qty_add">Збільшити кількість</string>
+    <string name="parsed_qty_remove">Зменшити кількість</string>
+    <string name="parsed_not_in_order">Не в замовленні</string>
+    <string name="quantity_dialog_title">Введіть кількість</string>
+    <string name="quantity_dialog_confirm">OK</string>
+    <string name="quantity_dialog_cancel">Скасувати</string>
+    <string name="quantity_dialog_error_invalid">Введіть число</string>
+    <string name="quantity_dialog_error_range">Максимум 9999</string>
+    <string name="review_title">Перегляд замовлення</string>
+    <string name="review_summary">Обрано %1$d товарів · всього %2$d одиниць</string>
+    <string name="review_empty">Ще не обрано товарів. Скористайтеся кнопками +/− у прайс-листі, щоб вибрати позиції.</string>
+    <string name="review_order_button">Замовити</string>
+    <string name="review_sending">Надсилання…</string>
+    <string name="review_order_dialog_title">Надіслати замовлення?</string>
+    <string name="review_order_dialog_message">Надіслати лист-замовлення з обраними позиціями на налаштовану адресу отримувача кожної компанії?</string>
+    <string name="review_order_dialog_confirm">Надіслати</string>
+    <string name="review_order_dialog_cancel">Скасувати</string>
+    <string name="config_add_button">Додати</string>
+    <string name="config_remove_button">Видалити</string>
+    <string name="config_empty">Ще не налаштовано відправників. Додайте одного вище.</string>
+    <string name="config_qr_show">Показати QR-код</string>
+    <string name="config_qr_scan">Сканувати QR-код</string>
+    <string name="config_qr_dialog_title">QR-код конфігурації</string>
+    <string name="config_qr_dialog_image">Зображення QR-коду</string>
+    <string name="config_qr_dialog_hint">Містить %1$d відправника(ів). Відскануйте його на іншому пристрої, щоб імпортувати.</string>
+    <string name="config_qr_generation_failed">Не вдалося створити QR-код.</string>
+    <string name="config_version">Версія %1$s</string>
+    <string name="qr_scan_permission_hint">Для сканування QR-кодів потрібен доступ до камери.</string>
+    <string name="qr_scan_grant_permission">Надати доступ до камери</string>
+    <string name="qr_scan_title">Сканування QR-коду</string>
+    <string name="gmail_fetch_button">Знайти останнє вкладення</string>
+    <string name="gmail_working_label">Робота…</string>
+    <string name="gmail_status_idle">Оберіть відправника нижче та натисніть кнопку, щоб надати доступ до Gmail.</string>
+    <string name="gmail_intro">
+        Зразок роботи з Gmail:
+        1. запитує доступ до Gmail (тільки читання) для облікового запису Google на цьому пристрої,
+        2. шукає найновіший лист від вказаного відправника,
+        3. завантажує перше вкладення у файли застосунку, якщо воно є.
+
+        Потрібно налаштувати перед початком роботи:
+        - увімкнути Gmail API у Google Cloud,
+        - створити Android OAuth-клієнт для пакета com.ror.nms2go,
+        - додати свій обліковий запис Gmail як тестового користувача на екрані згоди OAuth, якщо застосунок не перевірено.
+    </string>
+    <string name="auth_cancelled">Авторизацію скасовано або не вибрано жодного облікового запису Google.</string>
+    <string name="auth_oauth_invalid">Конфігурація OAuth-клієнта недійсна для цього ключа підпису застосунку або назви пакета.</string>
+    <string name="auth_network_error">Помилка мережі під час завершення авторизації Google.</string>
+    <string name="auth_failed">Помилка авторизації.</string>
+    <string name="auth_failed_status">%1$s Статус %2$d. %3$s</string>
+    <string name="auth_request_failed">Не вдалося виконати запит авторизації. Перевірте, що Google Play services, екран згоди OAuth та Android OAuth-клієнт налаштовані. %1$s</string>
+    <string name="auth_no_resolution">Авторизація потребує дій користувача, але Google не надав intent для підтвердження.</string>
+    <string name="auth_ui_launch_failed">Не вдалося запустити інтерфейс авторизації Google: %1$s</string>
+    <string name="auth_no_data">Google не повернув даних авторизації. Якщо ви відхилили екран згоди, це справжнє скасування. Інакше перевірте налаштування екрана згоди OAuth та тестових користувачів.</string>
+    <string name="auth_no_token">Google завершив авторизацію, але не повернув токен доступу. Зазвичай це означає, що Android OAuth-клієнт або надання доступу до Gmail налаштовано не повністю.</string>
+    <string name="gmail_requesting_readonly">Запит доступу до Gmail (тільки читання) для облікового запису Google на цьому пристрої...</string>
+    <string name="gmail_missing_sender">Не вказано відправника. Оберіть відправника та повторіть спробу.</string>
+    <string name="gmail_loading_emails">Авторизовано. Завантаження останніх листів для %1$s...</string>
+    <string name="gmail_loaded_emails">Завантажено %1$d листів із вкладеннями.</string>
+    <string name="gmail_lookup_failed">Помилка запиту до Gmail: %1$s</string>
+    <string name="gmail_requesting_access">Запит доступу до Gmail...</string>
+    <string name="order_downloading_price_lists">Авторизовано. Завантаження та розбір %1$d прайс-листів...</string>
+    <string name="order_download_failed">Не вдалося завантажити або розібрати жоден прайс-лист від налаштованих відправників.</string>
+    <string name="order_parse_failed">Не вдалося завантажити або розібрати вкладення: %1$s</string>
+    <string name="order_parsed">Розібрано %1$d рядків із %2$d постачальників.%3$s</string>
+    <string name="order_skipped"> Пропущено %1$d (%2$s): немає розбірного прайс-листа.</string>
+    <string name="order_requesting_access">Запит доступу до Gmail для надсилання листів-замовлень...</string>
+    <string name="order_send_failed">Не вдалося надіслати замовлення: %1$s</string>
+    <string name="order_subject">Замовлення %1$s %2$s</string>
+    <string name="order_errors_prefix"> Помилка: %1$s.</string>
+    <string name="order_no_receiver">не вказано отримувача</string>
+    <string name="order_email_col_code">Код</string>
+    <string name="order_email_col_name">Назва</string>
+    <string name="order_email_col_price">Ціна</string>
+    <string name="order_email_col_qty">Кількість</string>
+</resources>

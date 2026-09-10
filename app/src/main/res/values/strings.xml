@@ -1,0 +1,132 @@
+<resources>
+    <string name="app_name">nms2go</string>
+    <string name="menu_open">Open menu</string>
+    <string name="menu_overview">Overview</string>
+    <string name="menu_configuration">Configuration</string>
+    <string name="menu_orders">Sent orders</string>
+    <string name="orders_title">Sent orders</string>
+    <string name="orders_empty">No orders sent yet.</string>
+    <string name="orders_empty_hint">Orders you send from the review screen will appear here.</string>
+    <string name="orders_count">%1$d order(s)</string>
+    <string name="orders_status_sent">Sent</string>
+    <string name="orders_status_failed">Failed</string>
+    <string name="orders_row_to">To</string>
+    <string name="orders_row_items">%1$d items · %2$d units</string>
+    <string name="order_detail_title">Order details</string>
+    <string name="order_detail_missing">This order was not found.</string>
+    <string name="order_detail_sender">Sender</string>
+    <string name="order_detail_receiver">Receiver</string>
+    <string name="order_detail_subject">Subject</string>
+    <string name="order_detail_error">Error</string>
+    <string name="order_detail_summary">%1$d items · %2$d units</string>
+    <string name="config_title">Configuration</string>
+    <string name="config_add_title">Add supplier</string>
+    <string name="config_company_label">Company name</string>
+    <string name="config_sender_label">Sender email</string>
+    <string name="config_receiver_label">Recipient email (optional)</string>
+    <string name="config_parser_label">Excel parser</string>
+    <string name="config_parser_auto">Auto (by file name)</string>
+    <string name="config_save_button">Save</string>
+    <string name="config_edit_title">Edit supplier</string>
+    <string name="config_row_sender">Sender</string>
+    <string name="config_row_recipient">Recipient</string>
+    <string name="overview_refresh">Refresh</string>
+    <string name="overview_order">Order</string>
+    <string name="order_empty">No emails with attachments to order yet. Refresh the overview first.</string>
+    <string name="overview_intro">Latest email with an attachment for each configured sender.</string>
+    <string name="overview_empty">No senders configured yet. Add one in Configuration.</string>
+    <string name="overview_empty_prefix">No senders configured yet. Add one in</string>
+    <string name="overview_loading_hint">Loading latest emails…</string>
+    <string name="overview_no_subject">(no subject)</string>
+    <string name="overview_no_attachments">No email with attachments found.</string>
+    <string name="overview_no_messages">No messages from this sender.</string>
+    <string name="overview_tap_to_parse">Tap to download and parse the price list</string>
+    <string name="parsed_title">Compare &amp; Order</string>
+    <string name="back">Back</string>
+    <string name="parsed_summary">%1$s · %2$s · %3$d rows</string>
+    <string name="parsed_empty">No rows were found in this file.</string>
+    <string name="parsed_filter_hint">Filter by name</string>
+    <string name="parsed_filter_clear">Clear filter</string>
+    <string name="parsed_page_info">%1$d results</string>
+    <string name="parsed_page_of">Page %1$d of %2$d</string>
+    <string name="parsed_prev">Prev</string>
+    <string name="parsed_next">Next</string>
+    <string name="parsed_close">Close</string>
+    <string name="parsed_qty_hint">0 = not in order, 1+ = order quantity</string>
+    <string name="parsed_loading">Loading…</string>
+    <string name="parsed_loading_progress">Loaded %1$d/%2$d suppliers, loading…</string>
+    <string name="parsed_qty_add">Increase quantity</string>
+    <string name="parsed_qty_remove">Decrease quantity</string>
+    <string name="parsed_not_in_order">Not in order</string>
+    <string name="quantity_dialog_title">Enter quantity</string>
+    <string name="quantity_dialog_confirm">OK</string>
+    <string name="quantity_dialog_cancel">Cancel</string>
+    <string name="quantity_dialog_error_invalid">Enter a number</string>
+    <string name="quantity_dialog_error_range">Max is 9999</string>
+    <string name="review_title">Order review</string>
+    <string name="review_summary">Chosen %1$d items · %2$d units total</string>
+    <string name="review_empty">No items chosen yet. Use the +/− buttons in the price list to select items.</string>
+    <string name="review_order_button">Order</string>
+    <string name="review_sending">Sending…</string>
+    <string name="review_order_dialog_title">Send order?</string>
+    <string name="review_order_dialog_message">Send an order email to each company\'s configured receiver with the chosen items?</string>
+    <string name="review_order_dialog_confirm">Send</string>
+    <string name="review_order_dialog_cancel">Cancel</string>
+    <string name="config_add_button">Add</string>
+    <string name="config_remove_button">Remove</string>
+    <string name="config_empty">No senders configured yet. Add one above.</string>
+    <string name="config_qr_show">Show QR code</string>
+    <string name="config_qr_scan">Scan QR code</string>
+    <string name="config_qr_dialog_title">Sender configuration QR</string>
+    <string name="config_qr_dialog_image">QR code image</string>
+    <string name="config_qr_dialog_hint">Contains %1$d sender(s). Scan it on another device to import them.</string>
+    <string name="config_qr_generation_failed">Could not generate the QR code.</string>
+    <string name="config_version">Version %1$s</string>
+    <string name="qr_scan_permission_hint">Camera permission is required to scan QR codes.</string>
+    <string name="qr_scan_grant_permission">Grant camera permission</string>
+    <string name="qr_scan_title">Scan QR code</string>
+    <string name="gmail_fetch_button">Find latest attachment</string>
+    <string name="gmail_working_label">Working…</string>
+    <string name="gmail_status_idle">Choose a sender below and tap the button to authorize Gmail access.</string>
+    <string name="gmail_intro">
+        Sample Gmail flow:
+        1. requests readonly Gmail access for the device Google account,
+        2. searches for the newest message from the sender you enter,
+        3. downloads the first attachment into the app files area when one exists.
+
+        Setup required before this works:
+        - enable the Gmail API in Google Cloud,
+        - create an Android OAuth client for package com.ror.nms2go,
+        - add your Gmail account as a test user on the OAuth consent screen if the app is not verified.
+    </string>
+    <string name="auth_cancelled">Authorization was cancelled or no Google account was selected.</string>
+    <string name="auth_oauth_invalid">OAuth client configuration is invalid for this app signing key or package name.</string>
+    <string name="auth_network_error">Network error while finishing Google authorization.</string>
+    <string name="auth_failed">Authorization failed.</string>
+    <string name="auth_failed_status">%1$s Status %2$d. %3$s</string>
+    <string name="auth_request_failed">Authorization request failed. Check that Google Play services, the OAuth consent screen, and the Android OAuth client are configured. %1$s</string>
+    <string name="auth_no_resolution">Authorization requires user action, but Google did not provide a resolution intent.</string>
+    <string name="auth_ui_launch_failed">Unable to launch the Google authorization UI: %1$s</string>
+    <string name="auth_no_data">Google returned no authorization data. If you dismissed the consent screen, this is a real cancel. Otherwise, check the OAuth consent screen and test-user setup.</string>
+    <string name="auth_no_token">Google completed authorization without returning an access token. This usually means the Android OAuth client or Gmail scope approval is not fully configured.</string>
+    <string name="gmail_requesting_readonly">Requesting Gmail readonly access for the Google account on this device...</string>
+    <string name="gmail_missing_sender">Missing sender query. Choose a sender and retry.</string>
+    <string name="gmail_loading_emails">Authorized. Loading latest emails for %1$s...</string>
+    <string name="gmail_loaded_emails">Loaded %1$d email(s) with attachments.</string>
+    <string name="gmail_lookup_failed">Gmail request failed: %1$s</string>
+    <string name="gmail_requesting_access">Requesting Gmail access...</string>
+    <string name="order_downloading_price_lists">Authorized. Downloading and parsing %1$d price list(s)...</string>
+    <string name="order_download_failed">Could not download or parse any price list from the configured senders.</string>
+    <string name="order_parse_failed">Could not download or parse attachments: %1$s</string>
+    <string name="order_parsed">Parsed %1$d rows across %2$d supplier(s).%3$s</string>
+    <string name="order_skipped"> Skipped %1$d (%2$s): no parsable price list.</string>
+    <string name="order_requesting_access">Requesting Gmail access to send order emails...</string>
+    <string name="order_send_failed">Could not send orders: %1$s</string>
+    <string name="order_subject">Order %1$s %2$s</string>
+    <string name="order_errors_prefix"> Failed: %1$s.</string>
+    <string name="order_no_receiver">no receiver configured</string>
+    <string name="order_email_col_code">Code</string>
+    <string name="order_email_col_name">Name</string>
+    <string name="order_email_col_price">Price</string>
+    <string name="order_email_col_qty">Qty</string>
+</resources>

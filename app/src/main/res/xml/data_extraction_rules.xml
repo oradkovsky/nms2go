@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <!-- Cloud backup (Google Drive, 25 MB quota, API 31+) – only settings -->
+    <cloud-backup>
+        <include domain="database" path="nms2.db"/>
+        <include domain="sharedpref" path="."/>
+    </cloud-backup>
+    <!-- Device-to-device transfer (cable/Smart Switch, larger quota) – same minimal set -->
+    <device-transfer>
+        <include domain="database" path="nms2.db"/>
+        <include domain="sharedpref" path="."/>
+    </device-transfer>
+</data-extraction-rules>

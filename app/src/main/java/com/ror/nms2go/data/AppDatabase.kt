@@ -1,0 +1,86 @@
+package com.ror.nms2go.data
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+@Database(
+    entities = [SenderEntity::class, SentOrderEntity::class, OrderItemEntity::class],
+    version = 4,
+    exportSchema = false
+)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun senderDao(): SenderDao
+
+    abstract fun orderDao(): OrderDao
+
+    companion object {
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE senders ADD COLUMN company_name TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE senders ADD COLUMN receiver_email TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE senders ADD COLUMN parser TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `orders` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `sent_at` INTEGER NOT NULL,
+                        `company` TEXT NOT NULL,
+                        `sender_email` TEXT NOT NULL,
+                        `receiver_email` TEXT NOT NULL,
+                        `subject` TEXT NOT NULL,
+                        `status` TEXT NOT NULL,
+                        `error` TEXT
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_orders_sent_at` ON `orders` (`sent_at`)"
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `order_items` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `order_id` INTEGER NOT NULL,
+                        `code` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `price` REAL,
+                        `quantity` INTEGER NOT NULL,
+                        FOREIGN KEY(`order_id`) REFERENCES `orders`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_order_items_order_id` ON `order_items` (`order_id`)"
+                )
+            }
+        }
+
+        @Volatile
+        private var instance: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase {
+            return instance ?: synchronized(this) {
+                instance ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "nms2.db"
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+                    .also { instance = it }
+            }
+        }
+    }
+}
