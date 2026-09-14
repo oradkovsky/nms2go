@@ -94,13 +94,16 @@ fun ReviewScreen(
                         )
                     )
                 }
-                uiState.error?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+            }
+            is ReviewUiState.Error -> {
+                Text(
+                    text = uiState.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = onBack) {
+                    Text(text = stringResource(R.string.back))
                 }
             }
         }

@@ -17,8 +17,10 @@ sealed interface ReviewUiState {
         val quantities: Map<Int, Int>,
         val totalUnits: Int,
         val isSending: Boolean,
-        val error: String?,
         val showConfirm: Boolean
+    ) : ReviewUiState
+    data class Error(
+        val message: String
     ) : ReviewUiState
 }
 
@@ -58,6 +60,11 @@ class ReviewViewModel : ViewModel() {
     }
 
     private fun updateDerivedState() {
+        val error = _error.value
+        if (!error.isNullOrBlank()) {
+            _uiState.value = ReviewUiState.Error(message = error)
+            return
+        }
         val parsed = _parsed.value
         if (parsed == null) {
             _uiState.value = ReviewUiState.Empty
@@ -80,7 +87,6 @@ class ReviewViewModel : ViewModel() {
             quantities = quantities,
             totalUnits = totalUnits,
             isSending = _sending.value,
-            error = _error.value,
             showConfirm = _showConfirm.value
         )
     }
