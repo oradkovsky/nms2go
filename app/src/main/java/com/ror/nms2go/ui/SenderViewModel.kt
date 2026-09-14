@@ -21,10 +21,10 @@ class SenderViewModel @Inject constructor(
 ) : ViewModel() {
 
     val senders: StateFlow<List<SenderEntity>> = senderDao.observeAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
     val orders: StateFlow<List<SentOrderWithItems>> = orderDao.observeAllOrders()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
     fun order(id: Long): Flow<SentOrderWithItems?> = orderDao.observeOrder(id)
 
@@ -69,5 +69,9 @@ class SenderViewModel @Inject constructor(
         viewModelScope.launch {
             senderDao.deleteById(id)
         }
+    }
+
+    private companion object {
+        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
