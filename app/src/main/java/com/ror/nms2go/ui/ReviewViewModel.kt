@@ -41,11 +41,6 @@ class ReviewViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<ReviewUiState>(ReviewUiState.Empty)
     val uiState: StateFlow<ReviewUiState> = _uiState.asStateFlow()
 
-    init {
-        // Derive uiState from constituent flows – single source for screen rendering
-        // Use combine-like manual update via updateDerivedState() called on each setter
-    }
-
     fun updateData(
         parsed: ParsedExcel?,
         quantities: Map<Int, Int>,
