@@ -7,12 +7,12 @@ import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SentOrderWithItems
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class SenderViewModel @Inject constructor(
