@@ -7,7 +7,6 @@ import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SentOrderWithItems
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -33,8 +32,6 @@ class SenderViewModel @Inject constructor(
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             emptyList()
         )
-
-    fun order(id: Long): Flow<SentOrderWithItems?> = orderDao.observeOrder(id)
 
     fun addSender(companyName: String, email: String, receiverEmail: String, parser: String) {
         val company = companyName.trim()
