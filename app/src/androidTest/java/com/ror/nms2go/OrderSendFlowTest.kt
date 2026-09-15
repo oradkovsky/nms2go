@@ -85,9 +85,6 @@ class OrderSendFlowTest {
         rule.setContent {
             Nms2GoApp(
                 senders = emptyList(),
-                onAddSender = { _, _, _, _ -> },
-                onUpdateSender = { _, _, _, _, _ -> },
-                onRemoveSender = { _ -> },
                 loading = false,
                 statusText = "",
                 overviewResults = emptyList(),
@@ -222,9 +219,6 @@ class OrderSendFlowTest {
         rule.setContent {
             Nms2GoApp(
                 senders = listOf(sender),
-                onAddSender = { _, _, _, _ -> },
-                onUpdateSender = { _, _, _, _, _ -> },
-                onRemoveSender = { _ -> },
                 loading = false,
                 statusText = "",
                 overviewResults = overviewResultsState.value,

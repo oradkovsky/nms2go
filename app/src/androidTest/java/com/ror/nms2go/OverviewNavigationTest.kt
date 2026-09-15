@@ -27,9 +27,6 @@ class OverviewNavigationTest {
         rule.setContent {
             Nms2GoApp(
                 senders = emptyList(),
-                onAddSender = { _, _, _, _ -> },
-                onUpdateSender = { _, _, _, _, _ -> },
-                onRemoveSender = {},
                 loading = false,
                 statusText = "",
                 overviewResults = emptyList(),
