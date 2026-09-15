@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SenderViewModel @Inject constructor(
     private val senderDao: SenderDao,
-    private val orderDao: OrderDao
+    orderDao: OrderDao
 ) : ViewModel() {
 
     val senders: StateFlow<List<SenderEntity>> = senderDao.observeAll()
