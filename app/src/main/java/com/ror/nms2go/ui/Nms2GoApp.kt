@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -39,11 +40,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.ror.nms2go.R
 import com.ror.nms2go.ParsedExcel
-import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.SentOrderWithItems
 import kotlinx.coroutines.launch
 
@@ -100,9 +100,6 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.slideOutBack(): Ex
 @Composable
 fun Nms2GoApp(
     senders: List<SenderEntity>,
-    onAddSender: (String, String, String, String) -> Unit,
-    onUpdateSender: (Long, String, String, String, String) -> Unit,
-    onRemoveSender: (Long) -> Unit,
     loading: Boolean,
     statusText: String,
     overviewResults: List<SenderOverview>,
@@ -404,21 +401,30 @@ fun Nms2GoApp(
                 composable(
                     route = Destinations.CONFIG_DETAIL,
                     arguments = listOf(navArgument("senderId") { type = NavType.LongType })
-                ) { entry ->
-                    val senderId = entry.arguments?.getLong("senderId") ?: -1L
+                ) {
+                    val viewModel: ConfigDetailViewModel = hiltViewModel()
+                    val sender by viewModel.sender.collectAsState()
                     ConfigDetailScreen(
-                        initialSender = senders.firstOrNull { it.id == senderId },
-                        onAdd = onAddSender,
-                        onUpdate = onUpdateSender,
-                        onDelete = onRemoveSender,
+                        initialSender = sender,
+                        onAdd = viewModel::save,
+                        onUpdate = { _, company, email, receiver, parser ->
+                            viewModel.save(company, email, receiver, parser)
+                        },
+                        onDelete = { viewModel.delete() },
                         onBack = { navController.popBackStack() }
                     )
                 }
                 composable(Destinations.PARSED) {
-                    val parsedViewModel: ParsedViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                    val parsedViewModel: ParsedViewModel =
+                        androidx.lifecycle.viewmodel.compose.viewModel()
                     val parsedUiState by parsedViewModel.uiState.collectAsState()
                     LaunchedEffect(parsedExcel, orderQuantities, loading, orderLoadingProgress) {
-                        parsedViewModel.updateData(parsedExcel, orderQuantities, loading && orderLoadingProgress != null, orderLoadingProgress)
+                        parsedViewModel.updateData(
+                            parsedExcel,
+                            orderQuantities,
+                            loading && orderLoadingProgress != null,
+                            orderLoadingProgress
+                        )
                     }
                     LaunchedEffect(parsedViewModel) {
                         parsedViewModel.quantityChangeEvent.collect { (index, qty) ->
@@ -435,10 +441,16 @@ fun Nms2GoApp(
                     )
                 }
                 composable(Destinations.REVIEW) {
-                    val reviewViewModel: ReviewViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                    val reviewViewModel: ReviewViewModel =
+                        androidx.lifecycle.viewmodel.compose.viewModel()
                     val reviewUiState by reviewViewModel.uiState.collectAsState()
                     LaunchedEffect(parsedExcel, orderQuantities, sendingOrders, orderSendError) {
-                        reviewViewModel.updateData(parsedExcel, orderQuantities, sendingOrders, orderSendError)
+                        reviewViewModel.updateData(
+                            parsedExcel,
+                            orderQuantities,
+                            sendingOrders,
+                            orderSendError
+                        )
                     }
                     LaunchedEffect(reviewViewModel) {
                         reviewViewModel.quantityChangeEvent.collect { (index, qty) ->

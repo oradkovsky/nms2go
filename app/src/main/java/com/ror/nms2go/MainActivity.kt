@@ -101,9 +101,6 @@ class MainActivity : ComponentActivity() {
             Nms2GoTheme {
                 Nms2GoApp(
                     senders = senders,
-                    onAddSender = senderViewModel::addSender,
-                    onUpdateSender = senderViewModel::updateSender,
-                    onRemoveSender = senderViewModel::removeSender,
                     loading = workflow.loading,
                     statusText = workflow.statusText,
                     overviewResults = workflow.overviewResults,

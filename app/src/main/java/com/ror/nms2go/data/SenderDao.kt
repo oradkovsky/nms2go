@@ -20,6 +20,9 @@ interface SenderDao {
     @Update
     suspend fun update(sender: SenderEntity)
 
+    @Query("SELECT * FROM senders WHERE id = :id")
+    suspend fun getById(id: Long): SenderEntity?
+
     @Query("DELETE FROM senders WHERE id = :id")
     suspend fun deleteById(id: Long)
 }
