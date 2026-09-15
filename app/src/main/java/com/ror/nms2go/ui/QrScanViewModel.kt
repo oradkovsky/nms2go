@@ -6,6 +6,7 @@ import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.QrSender
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.data.SenderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ sealed interface QrScanUiState {
 
 @HiltViewModel
 class QrScanViewModel @Inject constructor(
-    private val senderDao: SenderDao
+    private val senderDao: SenderDao,
+    private val senderRepository: SenderRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<QrScanUiState>(QrScanUiState.Idle)
@@ -66,7 +68,7 @@ class QrScanViewModel @Inject constructor(
                         )
                     )
                 } else {
-                    senderDao.insert(
+                    senderRepository.insert(
                         SenderEntity(
                             companyName = company,
                             email = email,

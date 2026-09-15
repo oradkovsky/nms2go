@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.data.OrderDao
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.data.SentOrderWithItems
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SenderViewModel @Inject constructor(
     private val senderDao: SenderDao,
+    private val senderRepository: SenderRepository,
     orderDao: OrderDao
 ) : ViewModel() {
 
@@ -40,7 +42,7 @@ class SenderViewModel @Inject constructor(
         val parserValue = parser.trim()
         if (company.isBlank() || normalizedEmail.isBlank()) return
         viewModelScope.launch {
-            senderDao.insert(
+            senderRepository.insert(
                 SenderEntity(
                     companyName = company,
                     email = normalizedEmail,
