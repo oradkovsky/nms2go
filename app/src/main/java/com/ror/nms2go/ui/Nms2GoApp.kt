@@ -227,30 +227,30 @@ fun Nms2GoApp(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = when {
-                                currentRoute == Destinations.CONFIG ->
+                            text = when (currentRoute) {
+                                Destinations.CONFIG ->
                                     stringResource(R.string.config_title)
 
-                                currentRoute == Destinations.CONFIG_DETAIL ->
+                                Destinations.CONFIG_DETAIL ->
                                     if (editingSender()) {
                                         stringResource(R.string.config_edit_title)
                                     } else {
                                         stringResource(R.string.config_add_title)
                                     }
 
-                                currentRoute == Destinations.QR_SCAN ->
+                                Destinations.QR_SCAN ->
                                     stringResource(R.string.qr_scan_title)
 
-                                currentRoute == Destinations.PARSED ->
+                                Destinations.PARSED ->
                                     stringResource(R.string.parsed_title)
 
-                                currentRoute == Destinations.REVIEW ->
+                                Destinations.REVIEW ->
                                     stringResource(R.string.review_title)
 
-                                currentRoute == Destinations.ORDERS ->
+                                Destinations.ORDERS ->
                                     stringResource(R.string.orders_title)
 
-                                currentRoute == Destinations.ORDER_DETAIL ->
+                                Destinations.ORDER_DETAIL ->
                                     stringResource(R.string.order_detail_title)
 
                                 else -> stringResource(R.string.menu_overview)
