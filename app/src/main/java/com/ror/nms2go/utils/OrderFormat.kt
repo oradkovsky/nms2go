@@ -1,4 +1,4 @@
-package com.ror.nms2go.ui
+package com.ror.nms2go.utils
 
 import java.text.SimpleDateFormat
 import java.util.Date

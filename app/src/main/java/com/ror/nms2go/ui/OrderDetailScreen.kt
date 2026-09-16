@@ -28,6 +28,7 @@ import com.ror.nms2go.data.OrderStatus
 import com.ror.nms2go.data.SentOrderEntity
 import com.ror.nms2go.data.SentOrderWithItems
 import com.ror.nms2go.ui.theme.ThemedPreview
+import com.ror.nms2go.utils.formatOrderTimestamp
 import java.util.Locale
 
 @Composable
