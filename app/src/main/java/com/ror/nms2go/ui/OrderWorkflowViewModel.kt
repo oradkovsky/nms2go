@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
 data class OrderWorkflowUiState(
@@ -75,7 +74,7 @@ class OrderWorkflowViewModel @Inject constructor(
 
     fun loadOverview() {
         viewModelScope.launch {
-            val senders = withContext(ioDispatcher) { senderRepository.getAll() }
+            val senders = senderRepository.getAll()
             if (senders.isEmpty()) {
                 updateState {
                     it.copy(
@@ -92,16 +91,14 @@ class OrderWorkflowViewModel @Inject constructor(
 
     fun startOrderForOverview(overview: SenderOverview) {
         viewModelScope.launch {
-            val sender = withContext(ioDispatcher) {
-                senderRepository.getAll().firstOrNull { it.email == overview.senderQuery }
-            }
+            val sender = senderRepository.getAll().firstOrNull { it.email == overview.senderQuery }
             startOrder(listOf(OrderItem(overview, sender?.parser.orEmpty(), sender)))
         }
     }
 
     fun startOrderFromOverview() {
         viewModelScope.launch {
-            val senders = withContext(ioDispatcher) { senderRepository.getAll() }
+            val senders = senderRepository.getAll()
             val senderByEmail = senders.associateBy { it.email }
             val items = uiState.value.overviewResults
                 .filter { it.status == SenderOverview.Status.FOUND && it.messageId != null }
