@@ -2,7 +2,7 @@ package com.ror.nms2go.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ror.nms2go.data.OrderDao
+import com.ror.nms2go.data.OrderHistoryRepository
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderRepository
@@ -18,7 +18,7 @@ import javax.inject.Inject
 class SenderViewModel @Inject constructor(
     private val senderDao: SenderDao,
     private val senderRepository: SenderRepository,
-    orderDao: OrderDao
+    orderHistoryRepository: OrderHistoryRepository
 ) : ViewModel() {
 
     val senders: StateFlow<List<SenderEntity>> = senderDao.observeAll()
@@ -28,7 +28,7 @@ class SenderViewModel @Inject constructor(
             emptyList()
         )
 
-    val orders: StateFlow<List<SentOrderWithItems>> = orderDao.observeAllOrders()
+    val orders: StateFlow<List<SentOrderWithItems>> = orderHistoryRepository.observeAllOrders()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
