@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.ui.theme.ThemedPreview
 
 @Composable
 fun ConfigDetailScreen(
@@ -149,6 +150,41 @@ fun ConfigDetailScreen(
                 }
             }
         }
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun ConfigDetailScreenAddPreview() {
+    ThemedPreview {
+        ConfigDetailScreen(
+            initialSender = null,
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun ConfigDetailScreenEditPreview() {
+    ThemedPreview {
+        ConfigDetailScreen(
+            initialSender = SenderEntity(
+                id = 1L,
+                companyName = "Acme Corp",
+                email = "billing@acme.com",
+                receiverEmail = "user@example.com",
+                parser = "Test Parser",
+                createdAt = 1700000000000L
+            ),
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
     }
 }
 

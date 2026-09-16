@@ -2,11 +2,14 @@ package com.ror.nms2go.data
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
 @Singleton
 class SenderRepository @Inject constructor(
     private val senderDao: SenderDao
 ) {
+    fun observeAll(): Flow<List<SenderEntity>> = senderDao.observeAll()
+
     suspend fun insert(sender: SenderEntity) {
         senderDao.insert(sender)
     }

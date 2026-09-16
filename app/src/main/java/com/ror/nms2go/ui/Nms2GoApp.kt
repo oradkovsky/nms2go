@@ -359,7 +359,6 @@ fun Nms2GoApp(
                 }
                 composable(Destinations.CONFIG) {
                     ConfigScreen(
-                        senders = senders,
                         onAdd = {
                             navController.navigate(
                                 Destinations.CONFIG_DETAIL.replace(

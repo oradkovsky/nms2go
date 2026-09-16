@@ -1,4 +1,4 @@
-package com.ror.nms2go.ui
+package com.ror.nms2go.utils
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag

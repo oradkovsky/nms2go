@@ -35,13 +35,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ror.nms2go.BuildConfig
 import com.ror.nms2go.R
 import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.ui.theme.ThemedPreview
+import com.ror.nms2go.utils.generateQrCode
 
 @Composable
 fun ConfigScreen(
+    onAdd: () -> Unit,
+    onEdit: (Long) -> Unit,
+    onScanQr: () -> Unit,
+    viewModel: ConfigViewModel = hiltViewModel()
+) {
+    val senders by viewModel.senders.collectAsStateWithLifecycle()
+    ConfigScreenContent(senders = senders, onAdd = onAdd, onEdit = onEdit, onScanQr = onScanQr)
+}
+
+@Composable
+private fun ConfigScreenContent(
     senders: List<SenderEntity>,
     onAdd: () -> Unit,
     onEdit: (Long) -> Unit,
@@ -218,5 +233,40 @@ private fun SenderRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun ConfigScreenPopulatedPreview() {
+    ThemedPreview {
+        ConfigScreenContent(
+            senders = listOf(
+                SenderEntity(
+                    id = 1L,
+                    companyName = "Acme Corp",
+                    email = "billing@acme.com",
+                    receiverEmail = "user@example.com",
+                    parser = "PDF_PARSER_V1",
+                    createdAt = 1700000000000L
+                )
+            ),
+            onAdd = {},
+            onEdit = {},
+            onScanQr = {}
+        )
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun ConfigScreenEmptyPreview() {
+    ThemedPreview {
+        ConfigScreenContent(
+            senders = emptyList(),
+            onAdd = {},
+            onEdit = {},
+            onScanQr = {}
+        )
     }
 }

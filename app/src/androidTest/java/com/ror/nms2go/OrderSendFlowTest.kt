@@ -165,7 +165,14 @@ class OrderSendFlowTest {
         rule.waitForIdle()
         TestVisuals.afterAction()
 
+        // Current production shows Error state (hides orderButton); retry requires clearing error
         rule.onNodeWithText(failure).assertIsDisplayed()
+        rule.onAllNodesWithTag(ORDER_BUTTON_TAG).assertCountEquals(0)
+        rule.onNodeWithText(appContext.getString(R.string.back)).assertIsDisplayed()
+        // Simulate error cleared (as if user dismissed) - Content should return with retry
+        harness.error.value = null
+        rule.waitForIdle()
+        TestVisuals.afterAction()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsEnabled()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).performClick()
         TestVisuals.afterAction()

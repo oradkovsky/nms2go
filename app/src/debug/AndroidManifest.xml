@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name="com.ror.nms2go.HiltTestActivity"
+            android:exported="true" />
+    </application>
+</manifest>

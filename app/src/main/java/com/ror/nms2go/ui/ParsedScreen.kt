@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ror.nms2go.R
+import com.ror.nms2go.utils.debugTestTag
 import java.util.Locale
 
 @Composable
