@@ -27,6 +27,8 @@ class OrderHistoryRepository @Inject constructor(
 ) {
     fun observeAllOrders(): Flow<List<SentOrderWithItems>> = orderDao.observeAllOrders()
 
+    fun observeOrder(id: Long): Flow<SentOrderWithItems?> = orderDao.observeOrder(id)
+
     suspend fun record(record: OrderHistoryRecord) {
         val orderId = orderDao.insertOrder(
             SentOrderEntity(
