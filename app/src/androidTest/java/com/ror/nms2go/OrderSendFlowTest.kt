@@ -7,7 +7,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -15,24 +15,44 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.content.Context
+import com.ror.nms2go.data.AppDatabase
+import com.ror.nms2go.data.OrderDao
 import com.ror.nms2go.data.OrderItemEntity
 import com.ror.nms2go.data.OrderStatus
 import com.ror.nms2go.data.SentOrderEntity
 import com.ror.nms2go.data.SentOrderWithItems
 import com.ror.nms2go.ui.Nms2GoApp
 import com.ror.nms2go.ui.ORDER_BUTTON_TAG
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class OrderSendFlowTest {
 
-    @get:Rule
-    val rule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
+    val rule = createAndroidComposeRule<HiltTestActivity>()
+
+    @Inject
+    lateinit var orderDao: OrderDao
+
+    @Inject
+    lateinit var appDatabase: AppDatabase
+
+    @Before
+    fun init() {
+        hiltRule.inject()
+        runBlocking { appDatabase.clearAllTables() }
+    }
 
     private val appContext: Context
         get() = ApplicationProvider.getApplicationContext()
@@ -64,24 +84,7 @@ class OrderSendFlowTest {
         val stamp = mutableIntStateOf(0)
         val sending = mutableStateOf(false)
         val error = mutableStateOf<String?>(null)
-        val parsed = mutableStateOf<ParsedExcel?>(
-            ParsedExcel(
-                supplier = "Test Supplier",
-                dateAsString = "01-01-2024",
-                rows = listOf(
-                    ExcelRow(
-                        counteragent = "Test Co",
-                        article = "Item A",
-                        vendor = "",
-                        price = 100.0,
-                        vat = "Так",
-                        code = "Item A | Test Co",
-                        receiver = "receiver@example.com",
-                        company = "Test Supplier"
-                    )
-                )
-            )
-        )
+        val parsed = mutableStateOf<ParsedExcel?>(null)
         rule.setContent {
             Nms2GoApp(
                 senders = emptyList(),
@@ -96,12 +99,30 @@ class OrderSendFlowTest {
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                orders = emptyList(),
                 orderSentStamp = stamp.value,
                 sendingOrders = sending.value,
                 orderSendError = error.value
             )
         }
+        TestVisuals.afterSetContent()
+        rule.waitForIdle()
+        parsed.value = ParsedExcel(
+            supplier = "Test Supplier",
+            dateAsString = "01-01-2024",
+            rows = listOf(
+                ExcelRow(
+                    counteragent = "Test Co",
+                    article = "Item A",
+                    vendor = "",
+                    price = 100.0,
+                    vat = "Так",
+                    code = "Item A | Test Co",
+                    receiver = "receiver@example.com",
+                    company = "Test Supplier"
+                )
+            )
+        )
+        rule.waitForIdle()
         TestVisuals.afterSetContent()
         return SendFlowHarness(stamp, sending, error)
     }
@@ -239,13 +260,17 @@ class OrderSendFlowTest {
                 onOrder = {},
                 onSendOrders = {
                     stamp.value = stamp.value + 1
-                    ordersState.value = listOf(createTestOrder(company = "Test Supplier"))
+                    val order = createTestOrder(company = "Test Supplier")
+                    runBlocking {
+                        val orderId = orderDao.insertOrder(order.order.copy(id = 0))
+                        orderDao.insertOrderItems(order.items.map { it.copy(id = 0, orderId = orderId) })
+                    }
+                    ordersState.value = listOf(order)
                 },
                 parsedExcel = parsed.value,
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                orders = ordersState.value,
                 orderSentStamp = stamp.value,
                 sendingOrders = false,
                 orderSendError = null

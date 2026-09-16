@@ -62,6 +62,8 @@
 -dontwarn org.yaml.snakeyaml.**
 -dontwarn org.openxmlformats.schemas.**
 
+-keep @kotlinx.serialization.Serializable class * { *; }
+
 # POI and its dependencies use reflection and service loaders at runtime,
 # so keep them intact while the app's own code stays minified.
 -keep class org.apache.poi.** { *; }

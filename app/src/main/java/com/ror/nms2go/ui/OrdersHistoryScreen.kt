@@ -21,12 +21,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ror.nms2go.R
+import com.ror.nms2go.data.OrderItemEntity
 import com.ror.nms2go.data.OrderStatus
+import com.ror.nms2go.data.SentOrderEntity
 import com.ror.nms2go.data.SentOrderWithItems
+import com.ror.nms2go.ui.theme.ThemedPreview
 
 @Composable
 fun OrdersHistoryScreen(
+    onOrderClick: (Long) -> Unit,
+    viewModel: OrdersHistoryViewModel = hiltViewModel()
+) {
+    val orders by viewModel.orders.collectAsStateWithLifecycle()
+    OrdersHistoryScreenContent(orders = orders, onOrderClick = onOrderClick)
+}
+
+@Composable
+fun OrdersHistoryScreen(
+    orders: List<SentOrderWithItems>,
+    onOrderClick: (Long) -> Unit
+) {
+    OrdersHistoryScreenContent(orders = orders, onOrderClick = onOrderClick)
+}
+
+@Composable
+private fun OrdersHistoryScreenContent(
     orders: List<SentOrderWithItems>,
     onOrderClick: (Long) -> Unit
 ) {
@@ -62,6 +85,57 @@ fun OrdersHistoryScreen(
                 OrdersRow(sent = sent, onClick = { onOrderClick(sent.order.id) })
             }
         }
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun OrdersHistoryEmptyPreview() {
+    ThemedPreview {
+        OrdersHistoryScreenContent(orders = emptyList(), onOrderClick = {})
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun OrdersHistoryPopulatedPreview() {
+    ThemedPreview {
+        OrdersHistoryScreenContent(
+            orders = listOf(
+                SentOrderWithItems(
+                    order = SentOrderEntity(
+                        id = 1,
+                        sentAt = 1_700_000_000_000L,
+                        company = "Альба",
+                        senderEmail = "alba@example.com",
+                        receiverEmail = "pharmacy@example.com",
+                        subject = "Order Альба 2024-11-14",
+                        status = OrderStatus.SENT,
+                        error = null
+                    ),
+                    items = listOf(
+                        OrderItemEntity(id = 10, orderId = 1, code = "C1", name = "Парацетамол", price = 12.5, quantity = 3),
+                        OrderItemEntity(id = 11, orderId = 1, code = "C2", name = "Ібупрофен", price = 95.0, quantity = 1)
+                    )
+                ),
+                SentOrderWithItems(
+                    order = SentOrderEntity(
+                        id = 2,
+                        sentAt = 1_700_000_100_000L,
+                        company = "Вента",
+                        senderEmail = "venta@example.com",
+                        receiverEmail = "other@example.com",
+                        subject = "Order Вента 2024-11-15",
+                        status = OrderStatus.FAILED,
+                        error = "no receiver configured"
+                    ),
+                    items = listOf(
+                        OrderItemEntity(id = 20, orderId = 2, code = "C3", name = "Аспірин", price = 10.0, quantity = 2)
+                    )
+                )
+            ),
+            onOrderClick = {}
+        )
     }
 }
 

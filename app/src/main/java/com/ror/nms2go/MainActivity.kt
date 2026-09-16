@@ -91,7 +91,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val senders by senderViewModel.senders.collectAsState()
-            val orders by senderViewModel.orders.collectAsState()
             val workflow by workflowViewModel.uiState.collectAsState()
 
             LaunchedEffect(Unit) {
@@ -112,7 +111,6 @@ class MainActivity : ComponentActivity() {
                     onDismissParsed = workflowViewModel::dismissParsed,
                     orderQuantities = workflow.orderQuantities,
                     onQuantityChange = workflowViewModel::onQuantityChange,
-                    orders = orders,
                     orderSentStamp = workflow.orderSentStamp,
                     sendingOrders = workflow.sendingOrders,
                     orderSendError = workflow.orderSendError,

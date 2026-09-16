@@ -44,8 +44,8 @@ import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
-import com.ror.nms2go.data.SentOrderWithItems
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 object Destinations {
     const val OVERVIEW = "overview"
@@ -55,8 +55,13 @@ object Destinations {
     const val PARSED = "parsed"
     const val REVIEW = "review"
     const val ORDERS = "orders"
-    const val ORDER_DETAIL = "order_detail/{orderId}"
+    val ORDER_DETAIL = "${OrderDetailRoute::class.qualifiedName}/{orderId}"
 }
+
+@Serializable
+data class OrderDetailRoute(
+    val orderId: Long
+)
 
 private const val DRAWER_ANIMATION_DURATION = 300
 
@@ -111,7 +116,6 @@ fun Nms2GoApp(
     onDismissParsed: () -> Unit,
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
-    orders: List<SentOrderWithItems>,
     orderSentStamp: Int,
     sendingOrders: Boolean,
     orderSendError: String?,
@@ -223,30 +227,30 @@ fun Nms2GoApp(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = when {
-                                currentRoute == Destinations.CONFIG ->
+                            text = when (currentRoute) {
+                                Destinations.CONFIG ->
                                     stringResource(R.string.config_title)
 
-                                currentRoute == Destinations.CONFIG_DETAIL ->
+                                Destinations.CONFIG_DETAIL ->
                                     if (editingSender()) {
                                         stringResource(R.string.config_edit_title)
                                     } else {
                                         stringResource(R.string.config_add_title)
                                     }
 
-                                currentRoute == Destinations.QR_SCAN ->
+                                Destinations.QR_SCAN ->
                                     stringResource(R.string.qr_scan_title)
 
-                                currentRoute == Destinations.PARSED ->
+                                Destinations.PARSED ->
                                     stringResource(R.string.parsed_title)
 
-                                currentRoute == Destinations.REVIEW ->
+                                Destinations.REVIEW ->
                                     stringResource(R.string.review_title)
 
-                                currentRoute == Destinations.ORDERS ->
+                                Destinations.ORDERS ->
                                     stringResource(R.string.orders_title)
 
-                                currentRoute == Destinations.ORDER_DETAIL ->
+                                Destinations.ORDER_DETAIL ->
                                     stringResource(R.string.order_detail_title)
 
                                 else -> stringResource(R.string.menu_overview)
@@ -472,22 +476,13 @@ fun Nms2GoApp(
                 }
                 composable(Destinations.ORDERS) {
                     OrdersHistoryScreen(
-                        orders = orders,
                         onOrderClick = { orderId ->
-                            navController.navigate(
-                                Destinations.ORDER_DETAIL.replace("{orderId}", "$orderId")
-                            )
+                            navController.navigate(OrderDetailRoute(orderId))
                         }
                     )
                 }
-                composable(
-                    route = Destinations.ORDER_DETAIL,
-                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
-                ) { entry ->
-                    val orderId = entry.arguments?.getLong("orderId") ?: -1L
+                composable<OrderDetailRoute> {
                     OrderDetailScreen(
-                        orders = orders,
-                        orderId = orderId,
                         onBack = { navController.popBackStack() }
                     )
                 }

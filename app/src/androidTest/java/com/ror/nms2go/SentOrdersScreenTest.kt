@@ -5,34 +5,54 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.content.Context
+import com.ror.nms2go.data.AppDatabase
+import com.ror.nms2go.data.OrderDao
 import com.ror.nms2go.data.OrderItemEntity
 import com.ror.nms2go.data.OrderStatus
 import com.ror.nms2go.data.SentOrderEntity
 import com.ror.nms2go.data.SentOrderWithItems
 import com.ror.nms2go.ui.Nms2GoApp
-import com.ror.nms2go.ui.OrderDetailScreen
+import com.ror.nms2go.ui.OrderDetailScreenContent
 import com.ror.nms2go.ui.OrdersHistoryScreen
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
 class SentOrdersScreenTest {
 
-    @get:Rule
-    val rule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
+    val rule = createAndroidComposeRule<HiltTestActivity>()
+
+    @Inject
+    lateinit var orderDao: OrderDao
+
+    @Inject
+    lateinit var appDatabase: AppDatabase
+
+    @Before
+    fun init() {
+        hiltRule.inject()
+        runBlocking { appDatabase.clearAllTables() }
+    }
 
     private val appContext: Context
         get() = ApplicationProvider.getApplicationContext()
@@ -67,6 +87,17 @@ class SentOrdersScreenTest {
     )
 
     private fun setNms2GoApp(orders: List<SentOrderWithItems>) {
+        // Seed DB for self-contained OrdersHistoryScreen / OrderDetailScreen (OrderHistoryViewModel / OrderDetailViewModel)
+        runBlocking {
+            appDatabase.clearAllTables()
+            orders.forEach { sent ->
+                // Preserve original IDs for navigation assertions
+                val orderId = orderDao.insertOrder(sent.order)
+                // Re-map items to inserted orderId (handles autoGenerate)
+                val items = sent.items.map { it.copy(orderId = orderId) }
+                orderDao.insertOrderItems(items)
+            }
+        }
         rule.setContent {
             Nms2GoApp(
                 senders = emptyList(),
@@ -81,13 +112,14 @@ class SentOrdersScreenTest {
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
-                orders = orders,
                 orderSentStamp = 0,
                 sendingOrders = false,
                 orderSendError = null
             )
         }
         TestVisuals.afterSetContent()
+        // Wait for OrderHistoryViewModel to observe DB
+        rule.waitForIdle()
     }
 
     @Test
@@ -155,11 +187,10 @@ class SentOrdersScreenTest {
             error = "no receiver configured"
         )
         val sentHappy = order()
-        var currentOrders by mutableStateOf(listOf(sentHappy))
-        var currentId by mutableStateOf(1L)
+        var currentSent by mutableStateOf<SentOrderWithItems?>(sentHappy)
 
         rule.setContent {
-            OrderDetailScreen(orders = currentOrders, orderId = currentId, onBack = {})
+            OrderDetailScreenContent(sent = currentSent, onBack = {})
         }
         TestVisuals.afterSetContent()
         rule.onNodeWithText("Альба").assertIsDisplayed()
@@ -173,8 +204,7 @@ class SentOrdersScreenTest {
         rule.onNodeWithText("×1").assertIsDisplayed()
 
         // Switch to failed case – same screen but with error (state update, not second setContent)
-        currentOrders = listOf(sentFailed)
-        currentId = 4L
+        currentSent = sentFailed
         rule.waitForIdle()
         TestVisuals.afterAction()
         rule.onNodeWithText(appContext.getString(R.string.order_detail_error)).assertIsDisplayed()
@@ -187,7 +217,7 @@ class SentOrdersScreenTest {
     @Test
     fun orderDetail_missingOrder_showsNotFoundMessage() {
         rule.setContent {
-            OrderDetailScreen(orders = emptyList(), orderId = 99, onBack = {})
+            OrderDetailScreenContent(sent = null, onBack = {})
         }
         TestVisuals.afterSetContent()
 
@@ -197,22 +227,40 @@ class SentOrdersScreenTest {
 
     @Test
     fun fullNavigation_openingOrdersFromMenuThenRequestingDetails() {
-        setNms2GoApp(
-            orders = listOf(order(id = 1, company = "Альба", receiverEmail = "pharmacy@example.com"))
-        )
-
-        rule.onNodeWithContentDescription(appContext.getString(R.string.menu_open))
-            .performClick()
-        TestVisuals.afterAction()
-        rule.onNodeWithText(appContext.getString(R.string.menu_orders)).performClick()
-        TestVisuals.afterAction()
-
-        // Slimmed: no longer asserts orders_count/Альба duplicate of T2, just navigation
+        // Refactored for Nms2GoApp ORDERS/ORDER_DETAIL self-contained via ViewModel/DB:
+        // Test direct screens with fake orders via stateless overload instead of Nms2GoApp DB seeding
+        val fakeOrder = order(id = 1, company = "Альба", receiverEmail = "pharmacy@example.com")
+        var showDetail by mutableStateOf(false)
+        var detailId by mutableStateOf(-1L)
+        rule.setContent {
+            if (!showDetail) {
+                OrdersHistoryScreen(orders = listOf(fakeOrder), onOrderClick = {
+                    detailId = it
+                    showDetail = true
+                })
+            } else {
+                val sent = listOf(fakeOrder).firstOrNull { it.order.id == detailId }
+                com.ror.nms2go.ui.OrderDetailScreenContent(sent = sent, onBack = { showDetail = false })
+            }
+        }
+        TestVisuals.afterSetContent()
         rule.onNodeWithText("Альба").performClick()
         TestVisuals.afterAction()
-
         rule.onNodeWithText(appContext.getString(R.string.order_detail_receiver))
             .assertIsDisplayed()
         rule.onNodeWithText("pharmacy@example.com").assertIsDisplayed()
+    }
+
+    @Test
+    fun orderDetail_showsBackButtonInAppBar() {
+        setNms2GoApp(orders = listOf(order()))
+
+        rule.onNodeWithContentDescription(appContext.getString(R.string.menu_open)).performClick()
+        rule.onNodeWithText(appContext.getString(R.string.orders_title)).performClick()
+        rule.onNodeWithText("Альба").performClick()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText(appContext.getString(R.string.order_detail_title)).assertIsDisplayed()
+        rule.onNodeWithContentDescription(appContext.getString(R.string.back)).assertIsDisplayed()
     }
 }
