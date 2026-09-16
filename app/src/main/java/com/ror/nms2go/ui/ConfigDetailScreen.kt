@@ -38,11 +38,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
-import com.ror.nms2go.ui.theme.Nms2GoTheme
+import com.ror.nms2go.ui.theme.ThemedPreview
 
 @Composable
 fun ConfigDetailScreen(
@@ -154,10 +153,10 @@ fun ConfigDetailScreen(
     }
 }
 
-@Preview(name = "Add - Light", showBackground = true)
+@ThemedPreview
 @Composable
 private fun ConfigDetailScreenAddPreview() {
-    Nms2GoTheme {
+    ThemedPreview {
         ConfigDetailScreen(
             initialSender = null,
             onAdd = { _, _, _, _ -> },
@@ -168,10 +167,10 @@ private fun ConfigDetailScreenAddPreview() {
     }
 }
 
-@Preview(name = "Edit - Light", showBackground = true)
+@ThemedPreview
 @Composable
 private fun ConfigDetailScreenEditPreview() {
-    Nms2GoTheme {
+    ThemedPreview {
         ConfigDetailScreen(
             initialSender = SenderEntity(
                 id = 1L,

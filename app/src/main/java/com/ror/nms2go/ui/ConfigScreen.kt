@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +41,7 @@ import com.ror.nms2go.BuildConfig
 import com.ror.nms2go.R
 import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.ui.theme.ThemedPreview
 
 @Composable
 fun ConfigScreen(
@@ -235,33 +235,37 @@ private fun SenderRow(
     }
 }
 
-@Preview(name = "Populated List - Light Theme", showBackground = true)
+@ThemedPreview
 @Composable
-private fun ConfigScreenContentPreview() {
-    ConfigScreenContent(
-        senders = listOf(
-            SenderEntity(
-                id = 1L,
-                companyName = "Acme Corp",
-                email = "billing@acme.com",
-                receiverEmail = "user@example.com",
-                parser = "PDF_PARSER_V1",
-                createdAt = 1700000000000L
-            )
-        ),
-        onAdd = {},
-        onEdit = {},
-        onScanQr = {}
-    )
+private fun ConfigScreenPopulatedPreview() {
+    ThemedPreview {
+        ConfigScreenContent(
+            senders = listOf(
+                SenderEntity(
+                    id = 1L,
+                    companyName = "Acme Corp",
+                    email = "billing@acme.com",
+                    receiverEmail = "user@example.com",
+                    parser = "PDF_PARSER_V1",
+                    createdAt = 1700000000000L
+                )
+            ),
+            onAdd = {},
+            onEdit = {},
+            onScanQr = {}
+        )
+    }
 }
 
-@Preview(name = "Empty State - Light Theme", showBackground = true)
+@ThemedPreview
 @Composable
-private fun ConfigScreenContentEmptyPreview() {
-    ConfigScreenContent(
-        senders = emptyList(),
-        onAdd = {},
-        onEdit = {},
-        onScanQr = {}
-    )
+private fun ConfigScreenEmptyPreview() {
+    ThemedPreview {
+        ConfigScreenContent(
+            senders = emptyList(),
+            onAdd = {},
+            onEdit = {},
+            onScanQr = {}
+        )
+    }
 }
