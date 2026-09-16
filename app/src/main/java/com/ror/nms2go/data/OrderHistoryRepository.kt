@@ -1,8 +1,8 @@
 package com.ror.nms2go.data
 
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.flow.Flow
 
 data class OrderHistoryRecord(
     val company: String,
@@ -26,8 +26,6 @@ class OrderHistoryRepository @Inject constructor(
     private val orderDao: OrderDao
 ) {
     fun observeAllOrders(): Flow<List<SentOrderWithItems>> = orderDao.observeAllOrders()
-
-    fun observeOrder(id: Long): Flow<SentOrderWithItems?> = orderDao.observeOrder(id)
 
     suspend fun record(record: OrderHistoryRecord) {
         val orderId = orderDao.insertOrder(
