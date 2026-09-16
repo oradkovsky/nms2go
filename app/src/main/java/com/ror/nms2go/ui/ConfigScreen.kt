@@ -42,6 +42,7 @@ import com.ror.nms2go.R
 import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.ui.theme.ThemedPreview
+import com.ror.nms2go.utils.generateQrCode
 
 @Composable
 fun ConfigScreen(

@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ror.nms2go.R
+import com.ror.nms2go.utils.debugTestTag
 
 internal const val ORDER_BUTTON_TAG = "orderButton"
 

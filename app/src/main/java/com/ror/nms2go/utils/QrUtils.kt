@@ -1,4 +1,4 @@
-package com.ror.nms2go.ui
+package com.ror.nms2go.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color
