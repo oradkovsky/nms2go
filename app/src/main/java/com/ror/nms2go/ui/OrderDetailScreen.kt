@@ -40,17 +40,7 @@ fun OrderDetailScreen(
 }
 
 @Composable
-fun OrderDetailScreen(
-    orders: List<SentOrderWithItems>,
-    orderId: Long,
-    onBack: () -> Unit
-) {
-    val sent = orders.firstOrNull { it.order.id == orderId }
-    OrderDetailScreenContent(sent = sent, onBack = onBack)
-}
-
-@Composable
-private fun OrderDetailScreenContent(
+internal fun OrderDetailScreenContent(
     sent: SentOrderWithItems?,
     onBack: () -> Unit
 ) {

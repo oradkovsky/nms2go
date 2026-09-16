@@ -3,6 +3,7 @@ package com.ror.nms2go.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.ror.nms2go.data.OrderHistoryRepository
 import com.ror.nms2go.data.SentOrderWithItems
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ class OrderDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val orderId: Long = savedStateHandle.get<Long>("orderId") ?: -1L
+    private val orderId: Long =
+        checkNotNull(savedStateHandle.toRoute<OrderDetailRoute>().orderId)
 
     val order: StateFlow<SentOrderWithItems?> = orderHistoryRepository.observeOrder(orderId)
         .stateIn(

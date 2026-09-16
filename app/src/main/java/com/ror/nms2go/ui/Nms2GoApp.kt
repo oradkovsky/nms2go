@@ -46,6 +46,7 @@ import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.SentOrderWithItems
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 object Destinations {
     const val OVERVIEW = "overview"
@@ -57,6 +58,11 @@ object Destinations {
     const val ORDERS = "orders"
     const val ORDER_DETAIL = "order_detail/{orderId}"
 }
+
+@Serializable
+data class OrderDetailRoute(
+    val orderId: Long
+)
 
 private const val DRAWER_ANIMATION_DURATION = 300
 
@@ -472,22 +478,13 @@ fun Nms2GoApp(
                 }
                 composable(Destinations.ORDERS) {
                     OrdersHistoryScreen(
-                        orders = orders,
                         onOrderClick = { orderId ->
-                            navController.navigate(
-                                Destinations.ORDER_DETAIL.replace("{orderId}", "$orderId")
-                            )
+                            navController.navigate(OrderDetailRoute(orderId))
                         }
                     )
                 }
-                composable(
-                    route = Destinations.ORDER_DETAIL,
-                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
-                ) { entry ->
-                    val orderId = entry.arguments?.getLong("orderId") ?: -1L
+                composable<OrderDetailRoute> {
                     OrderDetailScreen(
-                        orders = orders,
-                        orderId = orderId,
                         onBack = { navController.popBackStack() }
                     )
                 }
