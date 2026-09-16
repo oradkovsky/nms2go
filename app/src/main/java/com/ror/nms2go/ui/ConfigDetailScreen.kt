@@ -38,9 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.ui.theme.Nms2GoTheme
 
 @Composable
 fun ConfigDetailScreen(
@@ -149,6 +151,41 @@ fun ConfigDetailScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Add - Light", showBackground = true)
+@Composable
+private fun ConfigDetailScreenAddPreview() {
+    Nms2GoTheme {
+        ConfigDetailScreen(
+            initialSender = null,
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
+    }
+}
+
+@Preview(name = "Edit - Light", showBackground = true)
+@Composable
+private fun ConfigDetailScreenEditPreview() {
+    Nms2GoTheme {
+        ConfigDetailScreen(
+            initialSender = SenderEntity(
+                id = 1L,
+                companyName = "Acme Corp",
+                email = "billing@acme.com",
+                receiverEmail = "user@example.com",
+                parser = "Test Parser",
+                createdAt = 1700000000000L
+            ),
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
     }
 }
 
