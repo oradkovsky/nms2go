@@ -10,6 +10,8 @@ class SenderRepository @Inject constructor(
 ) {
     fun observeAll(): Flow<List<SenderEntity>> = senderDao.observeAll()
 
+    suspend fun getAll(): List<SenderEntity> = senderDao.getAll()
+
     suspend fun insert(sender: SenderEntity) {
         senderDao.insert(sender)
     }

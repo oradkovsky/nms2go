@@ -15,8 +15,8 @@ import com.ror.nms2go.data.OrderHistoryItem
 import com.ror.nms2go.data.OrderHistoryRecord
 import com.ror.nms2go.data.OrderHistoryRepository
 import com.ror.nms2go.data.OrderStatus
-import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
+import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.di.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 
 data class OrderWorkflowUiState(
@@ -54,7 +53,7 @@ data class OrderWorkflowUiState(
 @HiltViewModel
 class OrderWorkflowViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val senderDao: SenderDao,
+    private val senderRepository: SenderRepository,
     private val gmailRepository: GmailRepository,
     private val orderHistoryRepository: OrderHistoryRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
@@ -75,7 +74,7 @@ class OrderWorkflowViewModel @Inject constructor(
 
     fun loadOverview() {
         viewModelScope.launch {
-            val senders = withContext(ioDispatcher) { senderDao.getAll() }
+            val senders = senderRepository.getAll()
             if (senders.isEmpty()) {
                 updateState {
                     it.copy(
@@ -92,16 +91,14 @@ class OrderWorkflowViewModel @Inject constructor(
 
     fun startOrderForOverview(overview: SenderOverview) {
         viewModelScope.launch {
-            val sender = withContext(ioDispatcher) {
-                senderDao.getAll().firstOrNull { it.email == overview.senderQuery }
-            }
+            val sender = senderRepository.getAll().firstOrNull { it.email == overview.senderQuery }
             startOrder(listOf(OrderItem(overview, sender?.parser.orEmpty(), sender)))
         }
     }
 
     fun startOrderFromOverview() {
         viewModelScope.launch {
-            val senders = withContext(ioDispatcher) { senderDao.getAll() }
+            val senders = senderRepository.getAll()
             val senderByEmail = senders.associateBy { it.email }
             val items = uiState.value.overviewResults
                 .filter { it.status == SenderOverview.Status.FOUND && it.messageId != null }
@@ -351,7 +348,7 @@ class OrderWorkflowViewModel @Inject constructor(
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
         val groups = chosen.groupBy { it.value.receiver to it.value.company }
         try {
-            val configuredSenders = senderDao.getAll()
+            val configuredSenders = senderRepository.getAll()
             val sent = mutableListOf<String>()
             val errors = mutableListOf<String>()
             for ((key, items) in groups) {

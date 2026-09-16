@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.QrSender
-import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +21,6 @@ sealed interface QrScanUiState {
 
 @HiltViewModel
 class QrScanViewModel @Inject constructor(
-    private val senderDao: SenderDao,
     private val senderRepository: SenderRepository
 ) : ViewModel() {
 
@@ -30,7 +28,7 @@ class QrScanViewModel @Inject constructor(
     val uiState: StateFlow<QrScanUiState> = _uiState.asStateFlow()
 
     /**
-     * Handles raw QR string. Decodes via QrCodec and persists via SenderDao.
+     * Handles raw QR string. Decodes via QrCodec and persists via SenderRepository.
      * Updates single uiState (Idle/Error/Success) – caller observes uiState for rendering and navigation.
      */
     fun handleRawScanned(rawValue: String) {
@@ -40,7 +38,7 @@ class QrScanViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            val existing = senderDao.getAll()
+            val existing = senderRepository.getAll()
             val handledIds = mutableSetOf<Long>()
             val seenKeys = mutableSetOf<String>()
             for (item in items) {
@@ -59,7 +57,7 @@ class QrScanViewModel @Inject constructor(
                 }
                 if (match != null) {
                     handledIds += match.id
-                    senderDao.update(
+                    senderRepository.update(
                         match.copy(
                             companyName = company,
                             email = email,

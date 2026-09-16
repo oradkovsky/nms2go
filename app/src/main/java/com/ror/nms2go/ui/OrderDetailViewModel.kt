@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.ror.nms2go.data.OrderHistoryRepository
 import com.ror.nms2go.data.SentOrderWithItems
+import com.ror.nms2go.ui.navigation.OrderDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
