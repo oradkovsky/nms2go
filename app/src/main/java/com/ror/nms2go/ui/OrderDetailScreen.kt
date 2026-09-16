@@ -217,7 +217,7 @@ private fun OrderDetailMissingPreview() {
 }
 
 @Composable
-private fun OrderItemRow(item: com.ror.nms2go.data.OrderItemEntity) {
+private fun OrderItemRow(item: OrderItemEntity) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
