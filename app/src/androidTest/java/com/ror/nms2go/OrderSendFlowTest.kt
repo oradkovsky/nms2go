@@ -99,7 +99,6 @@ class OrderSendFlowTest {
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                orders = emptyList(),
                 orderSentStamp = stamp.value,
                 sendingOrders = sending.value,
                 orderSendError = error.value
@@ -272,7 +271,6 @@ class OrderSendFlowTest {
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                orders = ordersState.value,
                 orderSentStamp = stamp.value,
                 sendingOrders = false,
                 orderSendError = null

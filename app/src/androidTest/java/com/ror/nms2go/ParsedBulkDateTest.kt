@@ -256,7 +256,6 @@ class ParsedBulkDateTest {
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
-                orders = emptyList(),
                 orderSentStamp = 0,
                 sendingOrders = false,
                 orderSendError = null,

@@ -44,7 +44,6 @@ import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
-import com.ror.nms2go.data.SentOrderWithItems
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -117,7 +116,6 @@ fun Nms2GoApp(
     onDismissParsed: () -> Unit,
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
-    orders: List<SentOrderWithItems>,
     orderSentStamp: Int,
     sendingOrders: Boolean,
     orderSendError: String?,
