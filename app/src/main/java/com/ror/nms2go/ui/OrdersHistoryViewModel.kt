@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class OrderHistoryViewModel @Inject constructor(
+class OrdersHistoryViewModel @Inject constructor(
     orderDao: OrderDao
 ) : ViewModel() {
 

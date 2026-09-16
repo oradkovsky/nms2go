@@ -34,7 +34,7 @@ import com.ror.nms2go.ui.theme.ThemedPreview
 @Composable
 fun OrdersHistoryScreen(
     onOrderClick: (Long) -> Unit,
-    viewModel: OrderHistoryViewModel = hiltViewModel()
+    viewModel: OrdersHistoryViewModel = hiltViewModel()
 ) {
     val orders by viewModel.orders.collectAsStateWithLifecycle()
     OrdersHistoryScreenContent(orders = orders, onOrderClick = onOrderClick)
