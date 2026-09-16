@@ -37,7 +37,7 @@ android {
         versionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
         versionName = "$versionMajor.$versionMinor.$versionPatch"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.ror.nms2go.HiltTestRunner"
         // Visual delay for UI tests: -PvisualDelay=true or -PvisualDelayMs=2000 enables 2s pause after each action
         val visualDelayEnabled = (findProperty("visualDelay") as? String)?.toBoolean() == true
         val visualDelayMs = (findProperty("visualDelayMs") as? String)?.toLongOrNull() ?: 3000L
@@ -145,4 +145,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.android.compiler)
 }
