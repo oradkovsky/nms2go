@@ -55,7 +55,7 @@ object Destinations {
     const val PARSED = "parsed"
     const val REVIEW = "review"
     const val ORDERS = "orders"
-    const val ORDER_DETAIL = "order_detail/{orderId}"
+    val ORDER_DETAIL = "${OrderDetailRoute::class.qualifiedName}/{orderId}"
 }
 
 @Serializable

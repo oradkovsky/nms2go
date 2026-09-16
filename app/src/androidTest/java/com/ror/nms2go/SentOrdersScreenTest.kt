@@ -250,4 +250,17 @@ class SentOrdersScreenTest {
             .assertIsDisplayed()
         rule.onNodeWithText("pharmacy@example.com").assertIsDisplayed()
     }
+
+    @Test
+    fun orderDetail_showsBackButtonInAppBar() {
+        setNms2GoApp(orders = listOf(order()))
+
+        rule.onNodeWithContentDescription(appContext.getString(R.string.menu_open)).performClick()
+        rule.onNodeWithText(appContext.getString(R.string.orders_title)).performClick()
+        rule.onNodeWithText("Альба").performClick()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText(appContext.getString(R.string.order_detail_title)).assertIsDisplayed()
+        rule.onNodeWithContentDescription(appContext.getString(R.string.back)).assertIsDisplayed()
+    }
 }
