@@ -75,6 +75,7 @@
     <string name="config_add_button">Add</string>
     <string name="config_remove_button">Remove</string>
     <string name="config_empty">No senders configured yet. Add one above.</string>
+    <string name="config_not_found">Supplier not found.</string>
     <string name="config_qr_show">Show QR code</string>
     <string name="config_qr_scan">Scan QR code</string>
     <string name="config_qr_dialog_title">Sender configuration QR</string>
