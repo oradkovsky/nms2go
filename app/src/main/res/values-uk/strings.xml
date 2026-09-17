@@ -75,6 +75,7 @@
     <string name="config_add_button">Додати</string>
     <string name="config_remove_button">Видалити</string>
     <string name="config_empty">Ще не налаштовано відправників. Додайте одного вище.</string>
+    <string name="config_not_found">Постачальника не знайдено.</string>
     <string name="config_qr_show">Показати QR-код</string>
     <string name="config_qr_scan">Сканувати QR-код</string>
     <string name="config_qr_dialog_title">QR-код конфігурації</string>
