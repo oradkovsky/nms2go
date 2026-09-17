@@ -18,14 +18,63 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-val versionPropertiesFile = file("version.properties")
-val versionProperties = Properties()
-if (versionPropertiesFile.exists()) {
-    versionProperties.load(FileInputStream(versionPropertiesFile))
+// Versioning is driven by x.y.z git tags (single source of truth).
+// - HEAD on exact tag  -> versionName "1.2.3", release builds allowed
+// - N commits after tag -> versionName "1.2.3-N-g<sha>" (+ "-dirty" if tree is dirty)
+// - No tag reachable / no git -> fallback "0.0.0-dev", versionCode 1
+// versionCode keeps the legacy scheme major * 10000 + minor * 100 + patch
+// so Play Store ordering is preserved across the migration.
+data class GitVersion(val versionName: String, val versionCode: Int, val isExactTag: Boolean)
+
+fun resolveGitVersion(): GitVersion {
+    val fallback = GitVersion("0.0.0-dev", 1, false)
+    val output = try {
+        val process = ProcessBuilder(
+            "git", "describe", "--tags", "--long", "--dirty",
+            "--match", "[0-9]*.[0-9]*.[0-9]*"
+        )
+            .directory(rootDir)
+            .redirectErrorStream(false)
+            .start()
+        val text = process.inputStream.bufferedReader().readText().trim()
+        if (process.waitFor() != 0 || text.isEmpty()) return fallback
+        text
+    } catch (_: Exception) {
+        return fallback
+    }
+    val parsed = Regex(
+        """^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?:-(?<distance>\d+)-g(?<sha>[0-9a-f]+))?(?<dirty>-dirty)?$"""
+    ).matchEntire(output) ?: return fallback
+    val major = parsed.groups["major"]!!.value.toInt()
+    val minor = parsed.groups["minor"]!!.value.toInt()
+    val patch = parsed.groups["patch"]!!.value.toInt()
+    val distance = parsed.groups["distance"]?.value?.takeIf { it != "0" }
+    val sha = parsed.groups["sha"]?.value
+    val dirty = parsed.groups["dirty"] != null
+    val versionName = buildString {
+        append("$major.$minor.$patch")
+        if (distance != null) append("-$distance-g$sha")
+        if (dirty) append("-dirty")
+    }
+    return GitVersion(
+        versionName = versionName,
+        versionCode = major * 10000 + minor * 100 + patch,
+        isExactTag = distance == null && !dirty
+    )
 }
-val versionMajor = (versionProperties.getProperty("VERSION_MAJOR") ?: "1").toIntOrNull() ?: 1
-val versionMinor = (versionProperties.getProperty("VERSION_MINOR") ?: "0").toIntOrNull() ?: 0
-val versionPatch = (versionProperties.getProperty("VERSION_PATCH") ?: "0").toIntOrNull() ?: 0
+
+val appVersion = resolveGitVersion()
+logger.lifecycle("App version: ${appVersion.versionName} (${appVersion.versionCode})")
+
+// Release APKs must come from an exact x.y.z tag so every release is traceable.
+gradle.taskGraph.whenReady {
+    if (hasTask(":app:assembleRelease") && !appVersion.isExactTag) {
+        throw GradleException(
+            "Release build requires HEAD to be exactly tagged x.y.z " +
+                "(resolved '${appVersion.versionName}'). Tag it first: git tag <x.y.z>"
+        )
+    }
+}
 
 android {
     namespace = "com.ror.nms2go"
@@ -35,8 +84,8 @@ android {
         applicationId = "com.ror.nms2go"
         minSdk = 26
         targetSdk = 36
-        versionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
-        versionName = "$versionMajor.$versionMinor.$versionPatch"
+        versionCode = appVersion.versionCode
+        versionName = appVersion.versionName
 
         testInstrumentationRunner = "com.ror.nms2go.HiltTestRunner"
         // Visual delay for UI tests: -PvisualDelay=true or -PvisualDelayMs=2000 enables 2s pause after each action

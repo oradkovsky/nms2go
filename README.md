@@ -50,4 +50,8 @@ app/src/main/java/com/ror/nms2go/
 Test runner `androidx.test.runner.AndroidJUnitRunner`, `BuildConfig.VISUAL_TEST_DELAY` controls `TestVisuals` delays.
 
 ## Versioning
-`app/version.properties` (`VERSION_MAJOR/MINOR/PATCH`) -> `versionCode = major*10000 + minor*100 + patch`, `versionName = major.minor.patch`.
+Git tags `x.y.z` are the single source of truth (`app/build.gradle.kts` resolves via `git describe`).
+`versionCode = major*10000 + minor*100 + patch`, `versionName` is the exact tag on release commits
+(e.g. `1.0.7`) or `<tag>-<distance>-g<sha>[-dirty]` on dev builds (fallback `0.0.0-dev` when no tag is reachable).
+Release a new version: `git tag 1.0.7 && git push origin 1.0.7`, then `./gradlew :app:assembleRelease`
+(release builds fail on untagged HEAD by design).
