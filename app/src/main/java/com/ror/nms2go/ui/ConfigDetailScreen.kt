@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -40,23 +41,62 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.R
-import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.ui.theme.ThemedPreview
 
 @Composable
 fun ConfigDetailScreen(
-    initialSender: SenderEntity?,
+    uiState: ConfigDetailUiState,
     onAdd: (String, String, String, String) -> Unit,
     onUpdate: (Long, String, String, String, String) -> Unit,
     onDelete: (Long) -> Unit,
     onBack: () -> Unit
 ) {
-    val editing = initialSender != null
+    when (uiState) {
+        ConfigDetailUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
 
-    var company by rememberSaveable { mutableStateOf(initialSender?.companyName ?: "") }
-    var email by rememberSaveable { mutableStateOf(initialSender?.email ?: "") }
-    var receiver by rememberSaveable { mutableStateOf(initialSender?.receiverEmail ?: "") }
-    var parser by rememberSaveable { mutableStateOf(initialSender?.parser ?: "") }
+        ConfigDetailUiState.NotFound -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(stringResource(R.string.config_not_found))
+            }
+        }
+
+        is ConfigDetailUiState.Content -> {
+            DetailForm(
+                item = uiState.item,
+                isEditing = uiState.isEditing,
+                onAdd = onAdd,
+                onUpdate = onUpdate,
+                onDelete = onDelete,
+                onBack = onBack
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailForm(
+    item: ConfigDetailItem,
+    isEditing: Boolean,
+    onAdd: (String, String, String, String) -> Unit,
+    onUpdate: (Long, String, String, String, String) -> Unit,
+    onDelete: (Long) -> Unit,
+    onBack: () -> Unit
+) {
+    // Keyed on the item id so fields re-initialize if a different item arrives.
+    var company by rememberSaveable(item.id) { mutableStateOf(item.company) }
+    var email by rememberSaveable(item.id) { mutableStateOf(item.email) }
+    var receiver by rememberSaveable(item.id) { mutableStateOf(item.receiver) }
+    var parser by rememberSaveable(item.id) { mutableStateOf(item.parser) }
 
     Column(
         modifier = Modifier
@@ -102,8 +142,8 @@ fun ConfigDetailScreen(
         ) {
             OutlinedButton(
                 onClick = {
-                    if (editing) {
-                        initialSender?.let { onUpdate(it.id, company, email, receiver, parser) }
+                    if (isEditing) {
+                        onUpdate(item.id, company, email, receiver, parser)
                     } else {
                         onAdd(company, email, receiver, parser)
                     }
@@ -124,11 +164,11 @@ fun ConfigDetailScreen(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            if (editing) {
+            if (isEditing) {
                 Spacer(Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = {
-                        initialSender?.let { onDelete(it.id) }
+                        onDelete(item.id)
                         onBack()
                     },
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -155,10 +195,24 @@ fun ConfigDetailScreen(
 
 @ThemedPreview
 @Composable
+private fun ConfigDetailScreenLoadingPreview() {
+    ThemedPreview {
+        ConfigDetailScreen(
+            uiState = ConfigDetailUiState.Loading,
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
+    }
+}
+
+@ThemedPreview
+@Composable
 private fun ConfigDetailScreenAddPreview() {
     ThemedPreview {
         ConfigDetailScreen(
-            initialSender = null,
+            uiState = ConfigDetailUiState.Content(ConfigDetailItem(), isEditing = false),
             onAdd = { _, _, _, _ -> },
             onUpdate = { _, _, _, _, _ -> },
             onDelete = {},
@@ -172,14 +226,30 @@ private fun ConfigDetailScreenAddPreview() {
 private fun ConfigDetailScreenEditPreview() {
     ThemedPreview {
         ConfigDetailScreen(
-            initialSender = SenderEntity(
-                id = 1L,
-                companyName = "Acme Corp",
-                email = "billing@acme.com",
-                receiverEmail = "user@example.com",
-                parser = "Test Parser",
-                createdAt = 1700000000000L
+            uiState = ConfigDetailUiState.Content(
+                ConfigDetailItem(
+                    id = 1L,
+                    company = "Acme Corp",
+                    email = "billing@acme.com",
+                    receiver = "user@example.com",
+                    parser = ""
+                ),
+                isEditing = true
             ),
+            onAdd = { _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
+    }
+}
+
+@ThemedPreview
+@Composable
+private fun ConfigDetailScreenNotFoundPreview() {
+    ThemedPreview {
+        ConfigDetailScreen(
+            uiState = ConfigDetailUiState.NotFound,
             onAdd = { _, _, _, _ -> },
             onUpdate = { _, _, _, _, _ -> },
             onDelete = {},

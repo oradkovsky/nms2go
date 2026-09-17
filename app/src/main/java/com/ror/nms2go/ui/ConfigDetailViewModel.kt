@@ -13,6 +13,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI model for the config detail screen. The screen never sees Room types —
+ * mapping from [SenderEntity] happens here, in [ConfigDetailViewModel].
+ */
+data class ConfigDetailItem(
+    val id: Long = -1L,
+    val company: String = "",
+    val email: String = "",
+    val receiver: String = "",
+    val parser: String = ""
+)
+
+sealed interface ConfigDetailUiState {
+    data object Loading : ConfigDetailUiState
+    data class Content(val item: ConfigDetailItem, val isEditing: Boolean) : ConfigDetailUiState
+    data object NotFound : ConfigDetailUiState
+}
+
 @HiltViewModel
 class ConfigDetailViewModel @Inject constructor(
     private val senderRepository: SenderRepository,
@@ -22,15 +40,24 @@ class ConfigDetailViewModel @Inject constructor(
 
     private val senderId: Long = savedStateHandle.get<Long>("senderId") ?: -1L
 
-    val isEditing: Boolean = senderId != -1L
-
-    private val _sender = MutableStateFlow<SenderEntity?>(null)
-    val sender: StateFlow<SenderEntity?> = _sender.asStateFlow()
+    private val _uiState: MutableStateFlow<ConfigDetailUiState> = MutableStateFlow(
+        if (senderId == -1L) {
+            ConfigDetailUiState.Content(ConfigDetailItem(), isEditing = false)
+        } else {
+            ConfigDetailUiState.Loading
+        }
+    )
+    val uiState: StateFlow<ConfigDetailUiState> = _uiState.asStateFlow()
 
     init {
-        if (isEditing) {
+        if (senderId != -1L) {
             viewModelScope.launch {
-                _sender.value = senderRepository.getById(senderId)
+                val entity = senderRepository.getById(senderId)
+                _uiState.value = if (entity == null) {
+                    ConfigDetailUiState.NotFound
+                } else {
+                    ConfigDetailUiState.Content(entity.toUiItem(), isEditing = true)
+                }
             }
         }
     }
@@ -48,9 +75,17 @@ class ConfigDetailViewModel @Inject constructor(
     }
 
     fun delete() {
-        if (!isEditing) return
+        if (senderId == -1L) return
         viewModelScope.launch {
             senderRepository.deleteById(senderId)
         }
     }
+
+    private fun SenderEntity.toUiItem() = ConfigDetailItem(
+        id = id,
+        company = companyName,
+        email = email,
+        receiver = receiverEmail,
+        parser = parser
+    )
 }

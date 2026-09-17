@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -121,9 +122,9 @@ fun Nms2GoNavHost(
             arguments = listOf(navArgument("senderId") { type = NavType.LongType })
         ) {
             val viewModel: ConfigDetailViewModel = hiltViewModel()
-            val sender by viewModel.sender.collectAsState()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             ConfigDetailScreen(
-                initialSender = sender,
+                uiState = uiState,
                 onAdd = viewModel::save,
                 onUpdate = { _, company, email, receiver, parser ->
                     viewModel.save(company, email, receiver, parser)
