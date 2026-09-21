@@ -9,7 +9,8 @@ data class QrSender(
     val company: String = "",
     val email: String = "",
     val receiver: String = "",
-    val parser: String = ""
+    val parser: String = "",
+    val skipKeywords: String = ""
 )
 
 object QrCodec {
@@ -19,9 +20,10 @@ object QrCodec {
     private const val KEY_EMAIL = "email"
     private const val KEY_RECEIVER = "receiver"
     private const val KEY_PARSER = "parser"
+    private const val KEY_SKIP_KEYWORDS = "skipKeywords"
 
     fun encode(senders: List<SenderEntity>): String =
-        encodeItems(senders.map { QrSender(it.companyName, it.email, it.receiverEmail, it.parser) })
+        encodeItems(senders.map { QrSender(it.companyName, it.email, it.receiverEmail, it.parser, it.skipKeywords) })
 
     fun encodeItems(items: List<QrSender>): String {
         val root = JSONObject()
@@ -33,6 +35,7 @@ object QrCodec {
                     .put(KEY_EMAIL, item.email)
                     .put(KEY_RECEIVER, item.receiver)
                     .put(KEY_PARSER, item.parser)
+                    .put(KEY_SKIP_KEYWORDS, item.skipKeywords)
             )
         }
         root.put(KEY_ITEMS, array)
@@ -66,7 +69,8 @@ object QrCodec {
                 company = obj.optString(KEY_COMPANY).trim(),
                 email = obj.optString(KEY_EMAIL).trim(),
                 receiver = obj.optString(KEY_RECEIVER).trim(),
-                parser = obj.optString(KEY_PARSER).trim()
+                parser = obj.optString(KEY_PARSER).trim(),
+                skipKeywords = obj.optString(KEY_SKIP_KEYWORDS).trim()
             )
             if (item.email.isNotBlank() || item.receiver.isNotBlank()) {
                 result += item

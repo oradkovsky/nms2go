@@ -46,8 +46,8 @@ import com.ror.nms2go.ui.theme.ThemedPreview
 @Composable
 fun ConfigDetailScreen(
     uiState: ConfigDetailUiState,
-    onAdd: (String, String, String, String) -> Unit,
-    onUpdate: (Long, String, String, String, String) -> Unit,
+    onAdd: (String, String, String, String, String) -> Unit,
+    onUpdate: (Long, String, String, String, String, String) -> Unit,
     onDelete: (Long) -> Unit,
     onBack: () -> Unit
 ) {
@@ -87,8 +87,8 @@ fun ConfigDetailScreen(
 private fun DetailForm(
     item: ConfigDetailItem,
     isEditing: Boolean,
-    onAdd: (String, String, String, String) -> Unit,
-    onUpdate: (Long, String, String, String, String) -> Unit,
+    onAdd: (String, String, String, String, String) -> Unit,
+    onUpdate: (Long, String, String, String, String, String) -> Unit,
     onDelete: (Long) -> Unit,
     onBack: () -> Unit
 ) {
@@ -97,6 +97,7 @@ private fun DetailForm(
     var email by rememberSaveable(item.id) { mutableStateOf(item.email) }
     var receiver by rememberSaveable(item.id) { mutableStateOf(item.receiver) }
     var parser by rememberSaveable(item.id) { mutableStateOf(item.parser) }
+    var skipKeywords by rememberSaveable(item.id) { mutableStateOf(item.skipKeywords) }
 
     Column(
         modifier = Modifier
@@ -134,6 +135,17 @@ private fun DetailForm(
         Spacer(Modifier.height(8.dp))
         ParserDropdown(parser = parser, onParserChange = { parser = it })
 
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = skipKeywords,
+            onValueChange = { skipKeywords = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.config_skip_keywords_label)) },
+            supportingText = { Text(stringResource(R.string.config_skip_keywords_hint)) },
+            singleLine = false,
+            minLines = 1
+        )
+
         Spacer(Modifier.height(16.dp))
 
         Row(
@@ -143,9 +155,9 @@ private fun DetailForm(
             OutlinedButton(
                 onClick = {
                     if (isEditing) {
-                        onUpdate(item.id, company, email, receiver, parser)
+                        onUpdate(item.id, company, email, receiver, parser, skipKeywords)
                     } else {
-                        onAdd(company, email, receiver, parser)
+                        onAdd(company, email, receiver, parser, skipKeywords)
                     }
                     onBack()
                 },
@@ -199,8 +211,8 @@ private fun ConfigDetailScreenLoadingPreview() {
     ThemedPreview {
         ConfigDetailScreen(
             uiState = ConfigDetailUiState.Loading,
-            onAdd = { _, _, _, _ -> },
-            onUpdate = { _, _, _, _, _ -> },
+            onAdd = { _, _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _, _ -> },
             onDelete = {},
             onBack = {}
         )
@@ -213,8 +225,8 @@ private fun ConfigDetailScreenAddPreview() {
     ThemedPreview {
         ConfigDetailScreen(
             uiState = ConfigDetailUiState.Content(ConfigDetailItem(), isEditing = false),
-            onAdd = { _, _, _, _ -> },
-            onUpdate = { _, _, _, _, _ -> },
+            onAdd = { _, _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _, _ -> },
             onDelete = {},
             onBack = {}
         )
@@ -236,8 +248,8 @@ private fun ConfigDetailScreenEditPreview() {
                 ),
                 isEditing = true
             ),
-            onAdd = { _, _, _, _ -> },
-            onUpdate = { _, _, _, _, _ -> },
+            onAdd = { _, _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _, _ -> },
             onDelete = {},
             onBack = {}
         )
@@ -250,8 +262,8 @@ private fun ConfigDetailScreenNotFoundPreview() {
     ThemedPreview {
         ConfigDetailScreen(
             uiState = ConfigDetailUiState.NotFound,
-            onAdd = { _, _, _, _ -> },
-            onUpdate = { _, _, _, _, _ -> },
+            onAdd = { _, _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _, _ -> },
             onDelete = {},
             onBack = {}
         )

@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,32 +25,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ror.nms2go.R
-import com.ror.nms2go.data.SenderOverview
-import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.utils.debugTestTag
 
 @Composable
 fun OverviewScreen(
-    senders: List<SenderEntity>,
-    loading: Boolean,
-    statusText: String,
-    overviewResults: List<SenderOverview>,
-    onLoad: () -> Unit,
-    onParseItem: (SenderOverview) -> Unit,
+    uiModel: OverviewUiModel,
+    onParseItem: (String) -> Unit,
     onNavigateToConfig: () -> Unit
 ) {
-    LaunchedEffect(senders, overviewResults) {
-        if (senders.isNotEmpty() && overviewResults.isEmpty() && !loading) {
-            onLoad()
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp)
     ) {
-        if (senders.isNotEmpty()) {
+        if (uiModel.hasConfiguredSenders) {
             Text(
                 text = stringResource(R.string.overview_intro),
                 style = MaterialTheme.typography.bodyLarge,
@@ -61,11 +48,11 @@ fun OverviewScreen(
             Spacer(Modifier.height(20.dp))
         }
 
-        if (loading) {
+        if (uiModel.isLoading) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (senders.isEmpty()) {
+        } else if (uiModel.showEmptyState) {
             val prefix = stringResource(R.string.overview_empty_prefix)
             val configuration = stringResource(R.string.menu_configuration)
             val linkColor = MaterialTheme.colorScheme.primary
@@ -96,14 +83,14 @@ fun OverviewScreen(
                 onClick = { onNavigateToConfig() }
             )
         } else {
-            OverviewList(senders = senders, results = overviewResults, onParseItem = onParseItem)
+            OverviewList(items = uiModel.items, onParseItem = onParseItem)
         }
 
-        if (senders.isNotEmpty()) {
+        if (uiModel.showStatus) {
             Spacer(Modifier.height(20.dp))
 
             Text(
-                text = statusText,
+                text = uiModel.statusText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -113,11 +100,10 @@ fun OverviewScreen(
 
 @Composable
 private fun OverviewList(
-    senders: List<SenderEntity>,
-    results: List<SenderOverview>,
-    onParseItem: (SenderOverview) -> Unit
+    items: List<OverviewUiItem>,
+    onParseItem: (String) -> Unit
 ) {
-    if (results.isEmpty()) {
+    if (items.isEmpty()) {
         // Don't show "Завантаження останніх листів…" when not loading – statusText at the bottom
         // already communicates idle / auth error. This prevents stuck loading hint after user
         // dismisses the Google account chooser (auth cancelled) while keeping the error label visible.
@@ -125,21 +111,19 @@ private fun OverviewList(
     }
 
     LazyColumn {
-        items(results, key = { it.senderQuery }) { result ->
-            val companyName = senders.firstOrNull { it.email == result.senderQuery }?.companyName
-            OverviewRow(result = result, companyName = companyName, onParseItem = onParseItem)
+        items(items, key = { it.senderQuery }) { item ->
+            OverviewRow(item = item, onParseItem = onParseItem)
         }
     }
 }
 
 @Composable
 private fun OverviewRow(
-    result: SenderOverview,
-    companyName: String?,
-    onParseItem: (SenderOverview) -> Unit
+    item: OverviewUiItem,
+    onParseItem: (String) -> Unit
 ) {
-    val onClick: (() -> Unit)? = if (result.status == SenderOverview.Status.FOUND) {
-        { onParseItem(result) }
+    val onClick: (() -> Unit)? = if (item.isParseable) {
+        { onParseItem(item.senderQuery) }
     } else {
         null
     }
@@ -151,21 +135,21 @@ private fun OverviewRow(
             onClick = onClick,
             modifier = cardModifier
         ) {
-            OverviewRowContent(result, companyName)
+            OverviewRowContent(item)
         }
     } else {
         OutlinedCard(modifier = cardModifier) {
-            OverviewRowContent(result, companyName)
+            OverviewRowContent(item)
         }
     }
 }
 
 @Composable
-private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
+private fun OverviewRowContent(item: OverviewUiItem) {
     Column(modifier = Modifier.padding(16.dp)) {
-        if (companyName != null) {
+        if (item.companyName != null) {
             Text(
-                text = companyName,
+                text = item.companyName,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -173,7 +157,7 @@ private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = result.senderQuery,
+                text = item.senderQuery,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -181,23 +165,23 @@ private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
             )
         } else {
             Text(
-                text = result.senderQuery,
+                text = item.senderQuery,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(Modifier.height(4.dp))
-        when (result.status) {
-            SenderOverview.Status.FOUND -> {
+        when (item.status) {
+            OverviewUiItemStatus.FOUND -> {
                 Text(
-                    text = result.subject?.let { displaySubject(it, result.date) }
+                    text = item.subject
                         ?: stringResource(R.string.overview_no_subject),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                result.date?.let { date ->
+                item.date?.let { date ->
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = date,
@@ -213,7 +197,7 @@ private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
                 )
             }
 
-            SenderOverview.Status.NO_ATTACHMENTS -> {
+            OverviewUiItemStatus.NO_ATTACHMENTS -> {
                 Text(
                     text = stringResource(R.string.overview_no_attachments),
                     style = MaterialTheme.typography.bodyMedium,
@@ -221,7 +205,7 @@ private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
                 )
             }
 
-            SenderOverview.Status.NO_MESSAGES -> {
+            OverviewUiItemStatus.NO_MESSAGES -> {
                 Text(
                     text = stringResource(R.string.overview_no_messages),
                     style = MaterialTheme.typography.bodyMedium,
@@ -230,24 +214,4 @@ private fun OverviewRowContent(result: SenderOverview, companyName: String?) {
             }
         }
     }
-}
-
-/**
- * We no longer append subject with date in " (date)" because date/time is already shown
- * in the separate Text below subject. Strip trailing date-like parentheses to avoid duplication.
- */
-private fun displaySubject(subject: String, date: String?): String {
-    if (date.isNullOrBlank()) return subject
-    // Exact match: subject ends with " (date)" where date is the same as displayed below
-    val exactSuffix = " ($date)"
-    if (subject.endsWith(exactSuffix)) {
-        return subject.removeSuffix(exactSuffix)
-    }
-    // Date below is "dd.MM.yyyy HH:mm" but subject may contain only "dd.MM.yyyy"
-    val dateOnly = date.substringBefore(" ")
-    if (dateOnly != date && subject.endsWith(" ($dateOnly)")) {
-        return subject.removeSuffix(" ($dateOnly)")
-    }
-    // Generic fallback: strip trailing "(dd.MM.yyyy...)" or "(dd-MM-yyyy...)" – any date-like parentheses
-    return subject.replace(Regex("""\s*\(\s*\d{2}[.\-]\d{2}[.\-]\d{4}[^)]*\)\s*$"""), "")
 }

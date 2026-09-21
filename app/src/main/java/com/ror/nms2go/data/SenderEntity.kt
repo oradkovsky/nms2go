@@ -16,6 +16,8 @@ data class SenderEntity(
     val receiverEmail: String = "",
     @ColumnInfo(name = "parser")
     val parser: String = "",
+    @ColumnInfo(name = "skip_keywords")
+    val skipKeywords: String = "",
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -144,16 +144,24 @@ class GmailApiClient(
     fun loadOverview(
         senders: List<String>,
         accessToken: String
+    ): List<SenderOverview> = loadOverviewForLookups(
+        lookups = senders.map { SenderLookup(it) },
+        accessToken = accessToken
+    )
+
+    fun loadOverviewForLookups(
+        lookups: List<SenderLookup>,
+        accessToken: String
     ): List<SenderOverview> {
-        if (senders.isEmpty()) return emptyList()
-        val executor = Executors.newFixedThreadPool(minOf(senders.size, MAX_PARALLEL_GMAIL_REQUESTS))
+        if (lookups.isEmpty()) return emptyList()
+        val executor = Executors.newFixedThreadPool(minOf(lookups.size, MAX_PARALLEL_GMAIL_REQUESTS))
         try {
-            val lookups = senders.map { sender ->
-                executor.submit<SenderOverview> { loadOverviewForSender(sender, accessToken) }
+            val tasks = lookups.map { lookup ->
+                executor.submit<SenderOverview> { loadOverviewForSender(lookup, accessToken) }
             }
-            return lookups.map { lookup ->
+            return tasks.map { task ->
                 try {
-                    lookup.get()
+                    task.get()
                 } catch (error: ExecutionException) {
                     throw error.cause ?: error
                 }
@@ -163,11 +171,20 @@ class GmailApiClient(
         }
     }
 
-    private fun loadOverviewForSender(sender: String, accessToken: String): SenderOverview {
-        val attachmentMessageId = latestMessageId(
-            query = priceListQuery(sender),
-            accessToken = accessToken
-        )
+    private fun loadOverviewForSender(lookup: SenderLookup, accessToken: String): SenderOverview {
+        val sender = lookup.email
+        val attachmentMessageId = if (lookup.skipKeywords.isEmpty()) {
+            latestMessageId(
+                query = priceListQuery(sender),
+                accessToken = accessToken
+            )
+        } else {
+            latestNonSkippedMessageId(
+                query = priceListQuery(sender),
+                skipKeywords = lookup.skipKeywords,
+                accessToken = accessToken
+            )
+        }
         if (attachmentMessageId == null) {
             val status = if (latestMessageId("from:$sender", accessToken) == null) {
                 SenderOverview.Status.NO_MESSAGES
@@ -309,15 +326,75 @@ class GmailApiClient(
             ?.takeIf { it.isNotBlank() }
     }
 
+    private fun listMessageIds(query: String, accessToken: String, maxResults: Int): List<String> {
+        val response = transport.getJson(
+            path = messageListPath(query, maxResults),
+            accessToken = accessToken
+        )
+        val messages = response.optJSONArray("messages") ?: JSONArray()
+        return (0 until messages.length())
+            .mapNotNull { messages.optJSONObject(it)?.optString("id")?.takeIf { id -> id.isNotBlank() } }
+    }
+
+    /**
+     * Generic skip filter: ignores price-list candidates whose subject contains any
+     * of [skipKeywords] (case-insensitive). Only used when the sender has skip
+     * keywords configured; otherwise the latest message is used as before.
+     */
+    private fun latestNonSkippedMessageId(
+        query: String,
+        skipKeywords: List<String>,
+        accessToken: String
+    ): String? {
+        val candidateIds = listMessageIds(query, accessToken, SKIP_SEARCH_MAX_RESULTS)
+        for (candidateId in candidateIds) {
+            val message = transport.getJson(
+                path = "/gmail/v1/users/me/messages/$candidateId?format=full",
+                accessToken = accessToken
+            )
+            val payload = message.optJSONObject("payload") ?: JSONObject()
+            if (subjectMatchesSkip(headerValue(payload, "Subject"), skipKeywords)) {
+                continue
+            }
+            val part = GmailAttachmentUtils.firstExcelAttachment(flattenAttachments(payload))
+                ?: GmailAttachmentUtils.firstAttachment(flattenAttachments(payload))
+            if (part != null) return candidateId
+        }
+        return null
+    }
+
     internal companion object {
         const val MAX_PARALLEL_GMAIL_REQUESTS = 3
+        const val SKIP_SEARCH_MAX_RESULTS = 10
 
         fun priceListQuery(sender: String): String =
             "from:$sender has:attachment {filename:xls filename:xlsx filename:zip}"
 
         fun messageListPath(query: String): String =
+            messageListPath(query, maxResults = 1)
+
+        fun messageListPath(query: String, maxResults: Int): String =
             "/gmail/v1/users/me/messages?q=${
                 URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-            }&maxResults=1"
+            }&maxResults=$maxResults"
+
+        /** Splits raw config text on commas, semicolons or newlines; blanks dropped. */
+        fun parseSkipKeywords(raw: String): List<String> =
+            raw.split(',', ';', '\n', '\r')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+
+        fun subjectMatchesSkip(subject: String?, skipKeywords: List<String>): Boolean {
+            if (subject.isNullOrBlank() || skipKeywords.isEmpty()) return false
+            return skipKeywords.any { keyword ->
+                keyword.isNotBlank() && subject.contains(keyword, ignoreCase = true)
+            }
+        }
     }
 }
+
+/** Per-sender Gmail lookup with optional subject skip keywords. */
+data class SenderLookup(
+    val email: String,
+    val skipKeywords: List<String> = emptyList()
+)

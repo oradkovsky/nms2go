@@ -12,12 +12,14 @@ class SaveSenderUseCase @Inject constructor(
         companyName: String,
         email: String,
         receiverEmail: String,
-        parser: String
+        parser: String,
+        skipKeywords: String = ""
     ) {
         val company = companyName.trim()
         val normalizedEmail = email.trim()
         val receiver = receiverEmail.trim()
         val parserValue = parser.trim()
+        val skipValue = skipKeywords.trim()
         if (company.isBlank() || normalizedEmail.isBlank()) return
 
         if (senderId != -1L) {
@@ -27,7 +29,8 @@ class SaveSenderUseCase @Inject constructor(
                     companyName = company,
                     email = normalizedEmail,
                     receiverEmail = receiver,
-                    parser = parserValue
+                    parser = parserValue,
+                    skipKeywords = skipValue
                 )
             )
         } else {
@@ -36,7 +39,8 @@ class SaveSenderUseCase @Inject constructor(
                     companyName = company,
                     email = normalizedEmail,
                     receiverEmail = receiver,
-                    parser = parserValue
+                    parser = parserValue,
+                    skipKeywords = skipValue
                 )
             )
         }

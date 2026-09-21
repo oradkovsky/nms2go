@@ -46,6 +46,7 @@ class QrScanViewModel @Inject constructor(
                 val email = item.email.trim()
                 val receiver = item.receiver.trim()
                 val parser = item.parser.trim()
+                val skipKeywords = item.skipKeywords.trim()
                 if (email.isBlank()) continue
                 val key = "${email.lowercase()}|${receiver.lowercase()}"
                 if (!seenKeys.add(key)) continue
@@ -62,7 +63,8 @@ class QrScanViewModel @Inject constructor(
                             companyName = company,
                             email = email,
                             receiverEmail = receiver,
-                            parser = parser
+                            parser = parser,
+                            skipKeywords = skipKeywords
                         )
                     )
                 } else {
@@ -71,7 +73,8 @@ class QrScanViewModel @Inject constructor(
                             companyName = company,
                             email = email,
                             receiverEmail = receiver,
-                            parser = parser
+                            parser = parser,
+                            skipKeywords = skipKeywords
                         )
                     )
                 }

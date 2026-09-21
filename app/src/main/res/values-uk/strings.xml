@@ -26,6 +26,8 @@
     <string name="config_receiver_label">Email отримувача (необов\'язково)</string>
     <string name="config_parser_label">Парсер Excel</string>
     <string name="config_parser_auto">Автоматично (за назвою файлу)</string>
+    <string name="config_skip_keywords_label">Пропускати листи з ключовими словами (необов\'язково)</string>
+    <string name="config_skip_keywords_hint">Ключові слова через кому; листи з будь-яким із них у темі ігноруються</string>
     <string name="config_save_button">Зберегти</string>
     <string name="config_edit_title">Редагувати постачальника</string>
     <string name="config_row_sender">Відправник</string>
@@ -53,8 +55,8 @@
     <string name="parsed_next">Наступна</string>
     <string name="parsed_close">Закрити</string>
     <string name="parsed_qty_hint">0 = не в замовленні, 1+ = кількість замовлення</string>
-    <string name="parsed_loading">Завантаження...</string>
-    <string name="parsed_loading_progress">Завантажено %1$d/%2$d постачальників, завантаження...</string>
+    <string name="parsed_loading">Завантаження…</string>
+    <string name="parsed_loading_progress">Завантажено %1$d/%2$d постачальників, завантаження…</string>
     <string name="parsed_qty_add">Збільшити кількість</string>
     <string name="parsed_qty_remove">Зменшити кількість</string>
     <string name="parsed_not_in_order">Не в замовленні</string>
@@ -110,18 +112,18 @@
     <string name="auth_ui_launch_failed">Не вдалося запустити інтерфейс авторизації Google: %1$s</string>
     <string name="auth_no_data">Google не повернув даних авторизації. Якщо ви відхилили екран згоди, це справжнє скасування. Інакше перевірте налаштування екрана згоди OAuth та тестових користувачів.</string>
     <string name="auth_no_token">Google завершив авторизацію, але не повернув токен доступу. Зазвичай це означає, що Android OAuth-клієнт або надання доступу до Gmail налаштовано не повністю.</string>
-    <string name="gmail_requesting_readonly">Запит доступу до Gmail (тільки читання) для облікового запису Google на цьому пристрої...</string>
+    <string name="gmail_requesting_readonly">Запит доступу до Gmail (тільки читання) для облікового запису Google на цьому пристрої…</string>
     <string name="gmail_missing_sender">Не вказано відправника. Оберіть відправника та повторіть спробу.</string>
-    <string name="gmail_loading_emails">Авторизовано. Завантаження останніх листів для %1$s...</string>
+    <string name="gmail_loading_emails">Авторизовано. Завантаження останніх листів для %1$s…</string>
     <string name="gmail_loaded_emails">Завантажено %1$d листів із вкладеннями.</string>
     <string name="gmail_lookup_failed">Помилка запиту до Gmail: %1$s</string>
-    <string name="gmail_requesting_access">Запит доступу до Gmail...</string>
-    <string name="order_downloading_price_lists">Авторизовано. Завантаження та розбір %1$d прайс-листів...</string>
+    <string name="gmail_requesting_access">Запит доступу до Gmail…</string>
+    <string name="order_downloading_price_lists">Авторизовано. Завантаження та розбір %1$d прайс-листів…</string>
     <string name="order_download_failed">Не вдалося завантажити або розібрати жоден прайс-лист від налаштованих відправників.</string>
     <string name="order_parse_failed">Не вдалося завантажити або розібрати вкладення: %1$s</string>
     <string name="order_parsed">Розібрано %1$d рядків із %2$d постачальників.%3$s</string>
     <string name="order_skipped"> Пропущено %1$d (%2$s): немає розбірного прайс-листа.</string>
-    <string name="order_requesting_access">Запит доступу до Gmail для надсилання листів-замовлень...</string>
+    <string name="order_requesting_access">Запит доступу до Gmail для надсилання листів-замовлень…</string>
     <string name="order_send_failed">Не вдалося надіслати замовлення: %1$s</string>
     <string name="order_subject">Замовлення %1$s %2$s</string>
     <string name="order_errors_prefix"> Помилка: %1$s.</string>

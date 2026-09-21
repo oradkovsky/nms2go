@@ -22,6 +22,7 @@ import com.ror.nms2go.ui.ConfigScreen
 import com.ror.nms2go.ui.OrderDetailScreen
 import com.ror.nms2go.ui.OrdersHistoryScreen
 import com.ror.nms2go.ui.OverviewScreen
+import com.ror.nms2go.ui.OverviewViewModel
 import com.ror.nms2go.ui.ParsedScreen
 import com.ror.nms2go.ui.ParsedViewModel
 import com.ror.nms2go.ui.QrScanScreen
@@ -59,13 +60,21 @@ fun Nms2GoNavHost(
         popExitTransition = { slideOutBack() }
     ) {
         composable(Destinations.OVERVIEW) {
+            val overviewViewModel: OverviewViewModel = hiltViewModel()
+            val overviewUiModel by overviewViewModel.uiModel.collectAsState()
+
+            LaunchedEffect(senders, loading, statusText, overviewResults) {
+                overviewViewModel.updateData(senders, loading, statusText, overviewResults)
+            }
+            LaunchedEffect(overviewViewModel) {
+                overviewViewModel.loadRequests.collect { onLoad() }
+            }
+            LaunchedEffect(overviewViewModel) {
+                overviewViewModel.parseItemRequests.collect(onParseItem)
+            }
             OverviewScreen(
-                senders = senders,
-                loading = loading,
-                statusText = statusText,
-                overviewResults = overviewResults,
-                onLoad = onLoad,
-                onParseItem = onParseItem,
+                uiModel = overviewUiModel,
+                onParseItem = overviewViewModel::onItemClicked,
                 onNavigateToConfig = {
                     navController.navigate(Destinations.CONFIG) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -126,8 +135,8 @@ fun Nms2GoNavHost(
             ConfigDetailScreen(
                 uiState = uiState,
                 onAdd = viewModel::save,
-                onUpdate = { _, company, email, receiver, parser ->
-                    viewModel.save(company, email, receiver, parser)
+                onUpdate = { _, company, email, receiver, parser, skipKeywords ->
+                    viewModel.save(company, email, receiver, parser, skipKeywords)
                 },
                 onDelete = { viewModel.delete() },
                 onBack = { navController.popBackStack() }

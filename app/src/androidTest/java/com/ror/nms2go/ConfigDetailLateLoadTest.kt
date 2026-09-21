@@ -30,8 +30,8 @@ class ConfigDetailLateLoadTest {
             val state by uiState.collectAsState()
             ConfigDetailScreen(
                 uiState = state,
-                onAdd = { _, _, _, _ -> },
-                onUpdate = { _, _, _, _, _ -> },
+                onAdd = { _, _, _, _, _ -> },
+                onUpdate = { _, _, _, _, _, _ -> },
                 onDelete = {},
                 onBack = {}
             )
@@ -44,7 +44,8 @@ class ConfigDetailLateLoadTest {
                 company = "Acme Corp",
                 email = "billing@acme.com",
                 receiver = "orders@acme.com",
-                parser = ""
+                parser = "",
+                skipKeywords = "відмови"
             ),
             isEditing = true
         )
@@ -53,6 +54,7 @@ class ConfigDetailLateLoadTest {
         rule.onNodeWithText("Acme Corp").assertIsDisplayed()
         rule.onNodeWithText("billing@acme.com").assertIsDisplayed()
         rule.onNodeWithText("orders@acme.com").assertIsDisplayed()
+        rule.onNodeWithText("відмови").assertIsDisplayed()
     }
 
     @Test
@@ -60,8 +62,8 @@ class ConfigDetailLateLoadTest {
         rule.setContent {
             ConfigDetailScreen(
                 uiState = ConfigDetailUiState.Loading,
-                onAdd = { _, _, _, _ -> },
-                onUpdate = { _, _, _, _, _ -> },
+                onAdd = { _, _, _, _, _ -> },
+                onUpdate = { _, _, _, _, _, _ -> },
                 onDelete = {},
                 onBack = {}
             )
