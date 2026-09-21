@@ -60,9 +60,9 @@ fun Nms2GoNavHost(
         popExitTransition = { slideOutBack() }
     ) {
         composable(Destinations.OVERVIEW) {
-            val overviewViewModel: OverviewViewModel =
-                androidx.lifecycle.viewmodel.compose.viewModel()
+            val overviewViewModel: OverviewViewModel = hiltViewModel()
             val overviewUiModel by overviewViewModel.uiModel.collectAsState()
+
             LaunchedEffect(senders, loading, statusText, overviewResults) {
                 overviewViewModel.updateData(senders, loading, statusText, overviewResults)
             }

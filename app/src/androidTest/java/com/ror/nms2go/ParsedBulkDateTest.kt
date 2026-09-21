@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -19,6 +19,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ror.nms2go.ui.ParsedScreen
 import com.ror.nms2go.ui.ParsedViewModel
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,11 +50,15 @@ private fun TestParsedScreenWithViewModel(
     )
 }
 
+@HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class ParsedBulkDateTest {
 
-    @get:Rule
-    val rule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
+    val rule = createAndroidComposeRule<HiltTestActivity>()
 
     private fun today(): String =
         SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())

@@ -3,6 +3,8 @@ package com.ror.nms2go.ui
 import androidx.lifecycle.ViewModel
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +48,8 @@ enum class OverviewUiItemStatus {
     NO_ATTACHMENTS
 }
 
-class OverviewViewModel : ViewModel() {
+@HiltViewModel
+class OverviewViewModel @Inject constructor() : ViewModel() {
 
     private val _uiModel = MutableStateFlow(OverviewUiModel())
     val uiModel: StateFlow<OverviewUiModel> = _uiModel.asStateFlow()
