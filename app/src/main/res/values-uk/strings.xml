@@ -26,6 +26,8 @@
     <string name="config_receiver_label">Email отримувача (необов\'язково)</string>
     <string name="config_parser_label">Парсер Excel</string>
     <string name="config_parser_auto">Автоматично (за назвою файлу)</string>
+    <string name="config_skip_keywords_label">Пропускати листи з ключовими словами (необов\'язково)</string>
+    <string name="config_skip_keywords_hint">Ключові слова через кому; листи з будь-яким із них у темі ігноруються</string>
     <string name="config_save_button">Зберегти</string>
     <string name="config_edit_title">Редагувати постачальника</string>
     <string name="config_row_sender">Відправник</string>

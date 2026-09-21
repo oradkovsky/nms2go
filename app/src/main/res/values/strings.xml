@@ -26,6 +26,8 @@
     <string name="config_receiver_label">Recipient email (optional)</string>
     <string name="config_parser_label">Excel parser</string>
     <string name="config_parser_auto">Auto (by file name)</string>
+    <string name="config_skip_keywords_label">Skip emails with keywords (optional)</string>
+    <string name="config_skip_keywords_hint">Comma-separated keywords; emails with any of them in the subject are ignored</string>
     <string name="config_save_button">Save</string>
     <string name="config_edit_title">Edit supplier</string>
     <string name="config_row_sender">Sender</string>
