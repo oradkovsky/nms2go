@@ -135,8 +135,8 @@ fun Nms2GoNavHost(
             ConfigDetailScreen(
                 uiState = uiState,
                 onAdd = viewModel::save,
-                onUpdate = { _, company, email, receiver, parser ->
-                    viewModel.save(company, email, receiver, parser)
+                onUpdate = { _, company, email, receiver, parser, skipKeywords ->
+                    viewModel.save(company, email, receiver, parser, skipKeywords)
                 },
                 onDelete = { viewModel.delete() },
                 onBack = { navController.popBackStack() }
