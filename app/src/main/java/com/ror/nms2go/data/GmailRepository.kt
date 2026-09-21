@@ -13,10 +13,10 @@ class GmailRepository @Inject constructor(
 ) {
     private val client = GmailApiClient(File(context.filesDir, "gmail-attachments"))
 
-    fun loadOverview(senders: List<String>, accessToken: String): List<SenderOverview> =
-        client.loadOverview(senders, accessToken)
-
-    fun loadOverviewForSenders(senders: List<SenderEntity>, accessToken: String): List<SenderOverview> =
+    fun loadOverviewForSenders(
+        senders: List<SenderEntity>,
+        accessToken: String
+    ): List<SenderOverview> =
         client.loadOverviewForLookups(
             senders.map { sender ->
                 SenderLookup(
