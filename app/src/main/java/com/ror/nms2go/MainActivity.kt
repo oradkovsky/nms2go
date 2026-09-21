@@ -3,7 +3,6 @@ package com.ror.nms2go
 import android.content.IntentSender
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,7 +16,7 @@ import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.ui.OrderWorkflowViewModel
 import com.ror.nms2go.ui.SenderViewModel
 import com.ror.nms2go.ui.Nms2GoApp
@@ -66,8 +65,7 @@ class MainActivity : ComponentActivity() {
                 authorizationClient.getAuthorizationResultFromIntent(result.data).accessToken
             )
         } catch (error: ApiException) {
-            Log.w(TAG, "Authorization result parsing failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Authorization result parsing failed", error)
             val baseMessage = when (error.statusCode) {
                 16 -> getString(R.string.auth_cancelled)
                 10 -> getString(R.string.auth_oauth_invalid)
@@ -138,8 +136,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             .addOnFailureListener { error ->
-                Log.w(TAG, "Authorization request failed", error)
-                FirebaseCrashlytics.getInstance().recordException(error)
+                AppLog.w(TAG, "Authorization request failed", error)
                 workflowViewModel.onAuthorizationFailure(
                     getString(R.string.auth_request_failed, error.localizedMessage.orEmpty())
                 )

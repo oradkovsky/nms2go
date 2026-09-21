@@ -1,7 +1,6 @@
 package com.ror.nms2go.data
 
-import android.util.Log
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.ror.nms2go.utils.AppLog
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -55,8 +54,7 @@ object QrCodec {
                 decodeArray(array)
             }
         } catch (e: Exception) {
-            Log.w("QrCodec", "QR decode failed", e)
-            FirebaseCrashlytics.getInstance().recordException(e)
+            AppLog.w("QrCodec", "QR decode failed", e)
             null
         }
     }

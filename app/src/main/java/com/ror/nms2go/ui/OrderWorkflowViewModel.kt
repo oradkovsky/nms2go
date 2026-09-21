@@ -1,14 +1,13 @@
 package com.ror.nms2go.ui
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
+import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.GmailRepository
 import com.ror.nms2go.data.OrderHistoryItem
@@ -208,8 +207,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Gmail lookup failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Gmail lookup failed", error)
             updateState {
                 it.copy(
                     loading = false,
@@ -321,8 +319,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Order download or parse failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Order download or parse failed", error)
             updateState {
                 it.copy(
                     loading = false,
@@ -394,8 +391,7 @@ class OrderWorkflowViewModel @Inject constructor(
                     )
                 } catch (error: Exception) {
                     error.rethrowIfCancellation()
-                    Log.w(TAG, "Order email to $receiver failed", error)
-                    FirebaseCrashlytics.getInstance().recordException(error)
+                    AppLog.w(TAG, "Order email to $receiver failed", error)
                     errors += "$name: ${error.localizedMessage.orEmpty()}"
                     recordOrder(
                         name,
@@ -429,8 +425,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Order sending failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Order sending failed", error)
             failSend(
                 context.getString(
                     R.string.order_send_failed,
@@ -471,8 +466,7 @@ class OrderWorkflowViewModel @Inject constructor(
             )
         } catch (failure: Exception) {
             failure.rethrowIfCancellation()
-            Log.w(TAG, "Could not record order history", failure)
-            FirebaseCrashlytics.getInstance().recordException(failure)
+            AppLog.w(TAG, "Could not record order history", failure)
         }
     }
 
