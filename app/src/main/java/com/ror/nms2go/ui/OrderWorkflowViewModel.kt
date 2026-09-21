@@ -84,7 +84,7 @@ class OrderWorkflowViewModel @Inject constructor(
                 }
                 return@launch
             }
-            pendingAuthorization = PendingAuthorization.Overview(senders.map { it.email })
+            pendingAuthorization = PendingAuthorization.Overview(senders)
             requestAuthorization(context.getString(R.string.gmail_requesting_readonly))
         }
     }
@@ -186,8 +186,8 @@ class OrderWorkflowViewModel @Inject constructor(
         _authorizationRequests.tryEmit(Unit)
     }
 
-    private fun loadOverview(senders: List<String>, accessToken: String) {
-        val label = if (senders.size == 1) senders.first() else "${senders.size} senders"
+    private fun loadOverview(senders: List<SenderEntity>, accessToken: String) {
+        val label = if (senders.size == 1) senders.first().email else "${senders.size} senders"
         updateState {
             it.copy(
                 statusText = context.getString(
@@ -197,7 +197,7 @@ class OrderWorkflowViewModel @Inject constructor(
             )
         }
         try {
-            val results = gmailRepository.loadOverview(senders, accessToken)
+            val results = gmailRepository.loadOverviewForSenders(senders, accessToken)
             val found = results.count { it.status == SenderOverview.Status.FOUND }
             updateState {
                 it.copy(
@@ -541,7 +541,7 @@ class OrderWorkflowViewModel @Inject constructor(
     }
 
     private sealed interface PendingAuthorization {
-        data class Overview(val senders: List<String>) : PendingAuthorization
+        data class Overview(val senders: List<SenderEntity>) : PendingAuthorization
         data class Parse(val items: List<OrderItem>) : PendingAuthorization
         data class Send(
             val items: List<IndexedValue<ExcelRow>>,

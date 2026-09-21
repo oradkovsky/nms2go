@@ -22,7 +22,8 @@ data class ConfigDetailItem(
     val company: String = "",
     val email: String = "",
     val receiver: String = "",
-    val parser: String = ""
+    val parser: String = "",
+    val skipKeywords: String = ""
 )
 
 sealed interface ConfigDetailUiState {
@@ -62,14 +63,21 @@ class ConfigDetailViewModel @Inject constructor(
         }
     }
 
-    fun save(companyName: String, email: String, receiverEmail: String, parser: String) {
+    fun save(
+        companyName: String,
+        email: String,
+        receiverEmail: String,
+        parser: String,
+        skipKeywords: String = ""
+    ) {
         viewModelScope.launch {
             saveSenderUseCase(
                 senderId = senderId,
                 companyName = companyName,
                 email = email,
                 receiverEmail = receiverEmail,
-                parser = parser
+                parser = parser,
+                skipKeywords = skipKeywords
             )
         }
     }
@@ -86,6 +94,7 @@ class ConfigDetailViewModel @Inject constructor(
         company = companyName,
         email = email,
         receiver = receiverEmail,
-        parser = parser
+        parser = parser,
+        skipKeywords = skipKeywords
     )
 }
