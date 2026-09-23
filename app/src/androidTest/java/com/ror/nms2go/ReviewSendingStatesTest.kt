@@ -278,6 +278,107 @@ class ReviewSendingStatesTest {
     }
 
     @Test
+    fun zeroQuantity_keepsRowVisible_noBlankScreen() {
+        val viewModel = ReviewViewModel()
+        setUp(viewModel)
+        TestVisuals.afterSetContent()
+
+        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        // User zeroes the item: it must stay on screen instead of vanishing to a blank screen.
+        viewModel.onQuantityChange(0, 0)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText("Item A").assertIsDisplayed()
+        rule.onNodeWithText("0").assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.review_empty)).assertDoesNotExist()
+        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun allZero_disablesSending_noDialog() {
+        val viewModel = ReviewViewModel()
+        setUp(viewModel)
+        TestVisuals.afterSetContent()
+
+        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+        viewModel.onQuantityChange(0, 0)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        // Nothing to send: order button disabled, and no confirm dialog is invocable.
+        rule.onNodeWithText(appContext.getString(R.string.review_order_button)).assertIsDisplayed()
+        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
+
+        viewModel.onOrderRequested()
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title)).assertDoesNotExist()
+    }
+
+    @Test
+    fun zeroQuantity_minusDisabled_plusAndTapEnabled() {
+        val viewModel = ReviewViewModel()
+        setUp(viewModel)
+        TestVisuals.afterSetContent()
+
+        viewModel.updateData(parsed(), mapOf(0 to 0), isSending = false, error = null)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText("−").assertIsNotEnabled()
+        rule.onNodeWithContentDescription(appContext.getString(R.string.parsed_qty_add))
+            .assertIsEnabled()
+
+        // Manual entry stays available at zero.
+        rule.onNodeWithText("0").performClick()
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun zeroThenPlus_reenablesSending() {
+        val viewModel = ReviewViewModel()
+        setUp(viewModel)
+        TestVisuals.afterSetContent()
+
+        viewModel.updateData(parsed(), mapOf(0 to 0), isSending = false, error = null)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
+
+        viewModel.onQuantityChange(0, 1)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText("1").assertIsDisplayed()
+        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsEnabled()
+    }
+
+    @Test
+    fun mixedZeroAndPositive_sendingEnabled_zeroRowStays() {
+        val viewModel = ReviewViewModel()
+        setUp(viewModel)
+        TestVisuals.afterSetContent()
+
+        viewModel.updateData(parsed(), mapOf(0 to 0, 1 to 2), isSending = false, error = null)
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText("Item A").assertIsDisplayed()
+        rule.onNodeWithText("Item B").assertIsDisplayed()
+        rule.onNodeWithText("0").assertIsDisplayed()
+        rule.onNodeWithText("2").assertIsDisplayed()
+        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsEnabled()
+    }
+
+    @Test
     fun sendingCleared_reenablesButton() {
         val viewModel = ReviewViewModel()
         setUp(viewModel)

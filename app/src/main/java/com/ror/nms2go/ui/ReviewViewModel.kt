@@ -71,8 +71,10 @@ class ReviewViewModel : ViewModel() {
             return
         }
         val quantities = _quantities.value
+        // All touched rows stay under review, including ones set back to 0 – a zeroed row
+        // must remain visible (with locked sending) instead of vanishing to a blank screen.
         val chosen = parsed.rows.withIndex()
-            .filter { (index, _) -> (quantities[index] ?: 0) > 0 }
+            .filter { (index, _) -> quantities.containsKey(index) }
             .sortedWith(
                 compareBy<IndexedValue<ExcelRow>> { it.value.price ?: Double.MAX_VALUE }
                     .thenBy { it.value.counteragent.lowercase() }
@@ -104,8 +106,10 @@ class ReviewViewModel : ViewModel() {
     }
 
     fun onOrderRequested() {
-        // Dialog may only be invoked from the enabled order button, never while sending.
+        // Dialog may only be invoked from the enabled order button: never while sending,
+        // and never when there is nothing to send (all quantities zero).
         if (_sending.value) return
+        if (_quantities.value.none { it.value > 0 }) return
         _showConfirm.value = true
         updateDerivedState()
     }
@@ -116,8 +120,9 @@ class ReviewViewModel : ViewModel() {
     }
 
     fun onConfirmOrder() {
-        // Ignore a stale confirm while sending to avoid a duplicate send.
-        if (_sending.value) {
+        // Ignore a stale confirm while sending to avoid a duplicate send,
+        // or when there is nothing to send (all quantities zero).
+        if (_sending.value || _quantities.value.none { it.value > 0 }) {
             _showConfirm.value = false
             updateDerivedState()
             return
