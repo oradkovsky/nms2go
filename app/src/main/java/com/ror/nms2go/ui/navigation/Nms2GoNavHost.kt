@@ -14,7 +14,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ror.nms2go.ParsedExcel
-import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.ui.ConfigDetailScreen
 import com.ror.nms2go.ui.ConfigDetailViewModel
@@ -34,7 +33,6 @@ import com.ror.nms2go.ui.ReviewViewModel
 @Composable
 fun Nms2GoNavHost(
     navController: NavHostController,
-    senders: List<SenderEntity>,
     loading: Boolean,
     statusText: String,
     overviewResults: List<SenderOverview>,
@@ -63,8 +61,8 @@ fun Nms2GoNavHost(
             val overviewViewModel: OverviewViewModel = hiltViewModel()
             val overviewUiModel by overviewViewModel.uiModel.collectAsState()
 
-            LaunchedEffect(senders, loading, statusText, overviewResults) {
-                overviewViewModel.updateData(senders, loading, statusText, overviewResults)
+            LaunchedEffect(loading, statusText, overviewResults) {
+                overviewViewModel.updateData(loading, statusText, overviewResults)
             }
             LaunchedEffect(overviewViewModel) {
                 overviewViewModel.loadRequests.collect { onLoad() }

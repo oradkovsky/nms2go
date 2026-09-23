@@ -131,7 +131,6 @@ fun Nms2GoApp(
         ) { innerPadding ->
             Nms2GoNavHost(
                 navController = navController,
-                senders = senders,
                 loading = loading,
                 statusText = statusText,
                 overviewResults = overviewResults,

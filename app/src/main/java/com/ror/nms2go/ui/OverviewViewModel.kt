@@ -1,8 +1,10 @@
 package com.ror.nms2go.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.data.SenderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 /**
  * Presentation-only data used by [OverviewScreen]. Domain and persistence models stay behind
@@ -49,7 +52,9 @@ enum class OverviewUiItemStatus {
 }
 
 @HiltViewModel
-class OverviewViewModel @Inject constructor() : ViewModel() {
+class OverviewViewModel @Inject constructor(
+    private val senderRepository: SenderRepository
+) : ViewModel() {
 
     private val _uiModel = MutableStateFlow(OverviewUiModel())
     val uiModel: StateFlow<OverviewUiModel> = _uiModel.asStateFlow()
@@ -61,37 +66,56 @@ class OverviewViewModel @Inject constructor() : ViewModel() {
     private val _parseItemRequests = MutableSharedFlow<SenderOverview>(extraBufferCapacity = 1)
     val parseItemRequests: SharedFlow<SenderOverview> = _parseItemRequests.asSharedFlow()
 
+    private var senders: List<SenderEntity> = emptyList()
     private var overviewResults: List<SenderOverview> = emptyList()
+    private var loading: Boolean = false
+    private var statusText: String = ""
     private var autoLoadRequestedForEmptyResults = false
 
+    init {
+        viewModelScope.launch {
+            senderRepository.observeAll().collect {
+                senders = it
+                rebuild()
+            }
+        }
+    }
+
     fun updateData(
-        senders: List<SenderEntity>,
         loading: Boolean,
         statusText: String,
         overviewResults: List<SenderOverview>
     ) {
+        this.loading = loading
+        this.statusText = statusText
         this.overviewResults = overviewResults
-        _uiModel.value = OverviewUiModel(
-            hasConfiguredSenders = senders.isNotEmpty(),
-            isLoading = loading,
-            statusText = statusText,
-            items = overviewResults.map { overview ->
-                OverviewUiItem(
-                    senderQuery = overview.senderQuery,
-                    companyName = senders.firstOrNull { it.email == overview.senderQuery }?.companyName,
-                    subject = overview.subject?.let { displaySubject(it, overview.date) },
-                    date = overview.date,
-                    status = overview.status.toUiItemStatus()
-                )
-            }
-        )
-        requestInitialLoadIfNeeded(senders.isNotEmpty(), loading, overviewResults)
+        rebuild()
     }
 
     fun onItemClicked(senderQuery: String) {
         overviewResults.firstOrNull {
             it.senderQuery == senderQuery && it.status == SenderOverview.Status.FOUND
         }?.let(_parseItemRequests::tryEmit)
+    }
+
+    private fun rebuild() {
+        val currentSenders = senders
+        val currentResults = overviewResults
+        _uiModel.value = OverviewUiModel(
+            hasConfiguredSenders = currentSenders.isNotEmpty(),
+            isLoading = loading,
+            statusText = statusText,
+            items = currentResults.map { overview ->
+                OverviewUiItem(
+                    senderQuery = overview.senderQuery,
+                    companyName = currentSenders.firstOrNull { it.email == overview.senderQuery }?.companyName,
+                    subject = overview.subject?.let { displaySubject(it, overview.date) },
+                    date = overview.date,
+                    status = overview.status.toUiItemStatus()
+                )
+            }
+        )
+        requestInitialLoadIfNeeded(currentSenders.isNotEmpty(), loading, currentResults)
     }
 
     private fun requestInitialLoadIfNeeded(
