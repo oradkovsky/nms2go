@@ -5,6 +5,7 @@ import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.SenderRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -17,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelTest {
 
     private val sendersFlow = MutableStateFlow<List<SenderEntity>>(emptyList())

@@ -7,6 +7,7 @@ import androidx.test.runner.AndroidJUnitRunner
 import com.ror.nms2go.utils.AppLog
 import dagger.hilt.android.testing.HiltTestApplication
 
+@Suppress("unused")
 class HiltTestRunner : AndroidJUnitRunner() {
     override fun onCreate(arguments: Bundle?) {
         // UI tests: console logging only, no Crashlytics reporting.
