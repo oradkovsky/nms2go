@@ -51,6 +51,7 @@ class SentOrdersScreenTest {
     @Before
     fun init() {
         hiltRule.inject()
+        FakeSenders.reset()
         runBlocking { appDatabase.clearAllTables() }
     }
 

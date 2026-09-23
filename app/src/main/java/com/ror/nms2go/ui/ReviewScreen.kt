@@ -69,7 +69,8 @@ fun ReviewScreen(
                             quantity = uiState.quantities[index] ?: 0,
                             onQuantityChange = { newQuantity ->
                                 onQuantityChange(index, newQuantity)
-                            }
+                            },
+                            enabled = !uiState.isSending
                         )
                     }
                 }
@@ -79,7 +80,8 @@ fun ReviewScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .debugTestTag(ORDER_BUTTON_TAG),
-                    enabled = !uiState.isSending
+                    // No sending while in progress, and nothing to send when all quantities are zero.
+                    enabled = !uiState.isSending && uiState.totalUnits > 0
                 ) {
                     if (uiState.isSending) {
                         CircularProgressIndicator(

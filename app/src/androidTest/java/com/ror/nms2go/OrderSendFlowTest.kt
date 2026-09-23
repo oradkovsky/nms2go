@@ -51,6 +51,7 @@ class OrderSendFlowTest {
     @Before
     fun init() {
         hiltRule.inject()
+        FakeSenders.reset()
         runBlocking { appDatabase.clearAllTables() }
     }
 
@@ -217,6 +218,7 @@ class OrderSendFlowTest {
             companyName = "Test Co",
             email = "sender@example.com"
         )
+        FakeSenders.senders.value = listOf(sender)
         val parsedExcel = ParsedExcel(
             supplier = "Test Supplier",
             dateAsString = "01-01-2024",

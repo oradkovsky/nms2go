@@ -26,6 +26,7 @@ class OverviewNavigationTest {
     @Before
     fun init() {
         hiltRule.inject()
+        FakeSenders.reset()
     }
 
     private val appContext: Context

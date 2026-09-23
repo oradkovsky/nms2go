@@ -259,7 +259,8 @@ private fun ParsedContent(
 internal fun ParsedRowView(
     row: com.ror.nms2go.ExcelRow,
     quantity: Int,
-    onQuantityChange: (Int) -> Unit
+    onQuantityChange: (Int) -> Unit,
+    enabled: Boolean = true
 ) {
     OutlinedCard(
         modifier = Modifier
@@ -303,7 +304,8 @@ internal fun ParsedRowView(
                 )
                 QuantityStepper(
                     quantity = quantity,
-                    onQuantityChange = onQuantityChange
+                    onQuantityChange = onQuantityChange,
+                    enabled = enabled
                 )
             }
         }
@@ -313,7 +315,8 @@ internal fun ParsedRowView(
 @Composable
 internal fun QuantityStepper(
     quantity: Int,
-    onQuantityChange: (Int) -> Unit
+    onQuantityChange: (Int) -> Unit,
+    enabled: Boolean = true
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var dialogText by remember { mutableStateOf(TextFieldValue("")) }
@@ -330,7 +333,7 @@ internal fun QuantityStepper(
         verticalAlignment = Alignment.CenterVertically
     ) {
         StepperButton(
-            enabled = quantity > 0,
+            enabled = enabled && quantity > 0,
             onClick = { onQuantityChange(quantity - 1) }
         ) {
             Text(
@@ -347,7 +350,8 @@ internal fun QuantityStepper(
             modifier = Modifier
                 .weight(1f)
                 .height(40.dp)
-                .clickable {
+                .alpha(if (enabled) 1f else 0.38f)
+                .clickable(enabled = enabled) {
                     val text = quantity.toString()
                     dialogText = TextFieldValue(
                         text = text,
@@ -369,7 +373,7 @@ internal fun QuantityStepper(
             color = MaterialTheme.colorScheme.outlineVariant
         )
         StepperButton(
-            enabled = quantity < MAX_QUANTITY,
+            enabled = enabled && quantity < MAX_QUANTITY,
             onClick = { onQuantityChange(quantity + 1) }
         ) {
             Icon(

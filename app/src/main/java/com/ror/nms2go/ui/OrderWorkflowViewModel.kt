@@ -1,14 +1,13 @@
 package com.ror.nms2go.ui
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
+import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.GmailRepository
 import com.ror.nms2go.data.OrderHistoryItem
@@ -37,6 +36,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
+
+/**
+ * Whether cached overview results must be dropped because the sender config changed
+ * since the results were loaded. Pure in its inputs, so the contract is unit-testable
+ * without Android dependencies.
+ */
+internal fun shouldInvalidateOverview(
+    loadedForSenders: List<SenderEntity>?,
+    latestSenders: List<SenderEntity>,
+    hasResults: Boolean
+): Boolean = loadedForSenders != null && hasResults && loadedForSenders != latestSenders
 
 data class OrderWorkflowUiState(
     val loading: Boolean,
@@ -71,6 +81,36 @@ class OrderWorkflowViewModel @Inject constructor(
     val authorizationRequests: SharedFlow<Unit> = _authorizationRequests.asSharedFlow()
 
     private var pendingAuthorization: PendingAuthorization? = null
+
+    // Senders the current overview results were loaded for. Null means "no fresh results":
+    // either nothing was loaded yet or the cache was invalidated by a config change.
+    private var overviewLoadedForSenders: List<SenderEntity>? = null
+
+    init {
+        viewModelScope.launch {
+            // Any config change (add / edit / delete / QR import) flows through
+            // SenderRepository – drop overview results loaded for older configs so the
+            // overview never shows Gmail data fetched for stale sender emails.
+            // Empty results re-trigger a fresh load via the overview auto-load.
+            senderRepository.observeAll().collect { latestSenders ->
+                if (
+                    shouldInvalidateOverview(
+                        loadedForSenders = overviewLoadedForSenders,
+                        latestSenders = latestSenders,
+                        hasResults = uiState.value.overviewResults.isNotEmpty()
+                    )
+                ) {
+                    overviewLoadedForSenders = null
+                    updateState {
+                        it.copy(
+                            overviewResults = emptyList(),
+                            statusText = context.getString(R.string.gmail_status_idle)
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     fun loadOverview() {
         viewModelScope.launch {
@@ -186,7 +226,7 @@ class OrderWorkflowViewModel @Inject constructor(
         _authorizationRequests.tryEmit(Unit)
     }
 
-    private fun loadOverview(senders: List<SenderEntity>, accessToken: String) {
+    private suspend fun loadOverview(senders: List<SenderEntity>, accessToken: String) {
         val label = if (senders.size == 1) senders.first().email else "${senders.size} senders"
         updateState {
             it.copy(
@@ -198,7 +238,19 @@ class OrderWorkflowViewModel @Inject constructor(
         }
         try {
             val results = gmailRepository.loadOverviewForSenders(senders, accessToken)
+            if (senderRepository.getAll() != senders) {
+                // Config changed while loading – drop stale results and stay invalidated.
+                updateState {
+                    it.copy(
+                        loading = false,
+                        overviewResults = emptyList(),
+                        statusText = context.getString(R.string.gmail_status_idle)
+                    )
+                }
+                return
+            }
             val found = results.count { it.status == SenderOverview.Status.FOUND }
+            overviewLoadedForSenders = senders
             updateState {
                 it.copy(
                     loading = false,
@@ -208,8 +260,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Gmail lookup failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Gmail lookup failed", error)
             updateState {
                 it.copy(
                     loading = false,
@@ -321,8 +372,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Order download or parse failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Order download or parse failed", error)
             updateState {
                 it.copy(
                     loading = false,
@@ -394,8 +444,7 @@ class OrderWorkflowViewModel @Inject constructor(
                     )
                 } catch (error: Exception) {
                     error.rethrowIfCancellation()
-                    Log.w(TAG, "Order email to $receiver failed", error)
-                    FirebaseCrashlytics.getInstance().recordException(error)
+                    AppLog.w(TAG, "Order email to $receiver failed", error)
                     errors += "$name: ${error.localizedMessage.orEmpty()}"
                     recordOrder(
                         name,
@@ -429,8 +478,7 @@ class OrderWorkflowViewModel @Inject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
-            Log.w(TAG, "Order sending failed", error)
-            FirebaseCrashlytics.getInstance().recordException(error)
+            AppLog.w(TAG, "Order sending failed", error)
             failSend(
                 context.getString(
                     R.string.order_send_failed,
@@ -471,8 +519,7 @@ class OrderWorkflowViewModel @Inject constructor(
             )
         } catch (failure: Exception) {
             failure.rethrowIfCancellation()
-            Log.w(TAG, "Could not record order history", failure)
-            FirebaseCrashlytics.getInstance().recordException(failure)
+            AppLog.w(TAG, "Could not record order history", failure)
         }
     }
 

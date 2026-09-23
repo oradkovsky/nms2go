@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
+import androidx.test.core.app.ApplicationProvider
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ror.nms2go.ui.ParsedScreen
 import com.ror.nms2go.ui.ParsedViewModel
@@ -24,6 +26,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,6 +62,14 @@ class ParsedBulkDateTest {
 
     @get:Rule(order = 1)
     val rule = createAndroidComposeRule<HiltTestActivity>()
+
+    @Before
+    fun init() {
+        FakeSenders.reset()
+    }
+
+    private val appContext: Context
+        get() = ApplicationProvider.getApplicationContext()
 
     private fun today(): String =
         SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
@@ -160,7 +171,7 @@ class ParsedBulkDateTest {
         rule.onNodeWithText("Альба (14-11-2024)", substring = true).assertIsDisplayed()
         rule.onNodeWithText("Бадм", substring = true).assertIsNotDisplayed()
         // Check sorted order: Cheap should be searchable, and header shows 1/2 loading
-        rule.onNodeWithText("Завантажено 1/2", substring = true).assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.parsed_loading_progress, 1, 2), substring = true).assertIsDisplayed()
         rule.onNodeWithText("Cheap", substring = true).assertIsDisplayed()
 
         // Second vendor arrives – same as MainActivity second loop iteration
@@ -270,7 +281,7 @@ class ParsedBulkDateTest {
         }
         TestVisuals.afterSetContent()
         rule.onNodeWithText("Альба (14-11-2024)", substring = true).assertIsDisplayed()
-        rule.onNodeWithText("Завантажено 1/2", substring = true).assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.parsed_loading_progress, 1, 2), substring = true).assertIsDisplayed()
 
         parsed = ParsedExcel(
             supplier = "Альба (14-11-2024), Бадм (15-11-2024)",
