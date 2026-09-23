@@ -51,6 +51,11 @@ class ReviewViewModel : ViewModel() {
         _quantities.value = quantities
         _sending.value = isSending
         _error.value = error
+        if (isSending) {
+            // The order button is disabled with a "Sending…" label while sending,
+            // so a confirm dialog must never stay visible on top of it.
+            _showConfirm.value = false
+        }
         updateDerivedState()
     }
 
@@ -87,6 +92,8 @@ class ReviewViewModel : ViewModel() {
     }
 
     fun onQuantityChange(index: Int, quantity: Int) {
+        // Quantities are locked while sending – the order snapshot must not change mid-send.
+        if (_sending.value) return
         val coerced = quantity.coerceIn(0, MAX_QUANTITY)
         _quantityChangeEvent.tryEmit(index to coerced)
         // Optimistically update local quantities for immediate UI resort – will be overwritten by parent's updateData on next frame
@@ -97,6 +104,8 @@ class ReviewViewModel : ViewModel() {
     }
 
     fun onOrderRequested() {
+        // Dialog may only be invoked from the enabled order button, never while sending.
+        if (_sending.value) return
         _showConfirm.value = true
         updateDerivedState()
     }
@@ -107,6 +116,12 @@ class ReviewViewModel : ViewModel() {
     }
 
     fun onConfirmOrder() {
+        // Ignore a stale confirm while sending to avoid a duplicate send.
+        if (_sending.value) {
+            _showConfirm.value = false
+            updateDerivedState()
+            return
+        }
         _showConfirm.value = false
         updateDerivedState()
         _orderRequested.tryEmit(Unit)

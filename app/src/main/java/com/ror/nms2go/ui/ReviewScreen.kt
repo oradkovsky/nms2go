@@ -69,7 +69,8 @@ fun ReviewScreen(
                             quantity = uiState.quantities[index] ?: 0,
                             onQuantityChange = { newQuantity ->
                                 onQuantityChange(index, newQuantity)
-                            }
+                            },
+                            enabled = !uiState.isSending
                         )
                     }
                 }
