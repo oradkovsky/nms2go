@@ -47,7 +47,7 @@ import com.ror.nms2go.utils.generateQrCode
 @Composable
 fun ConfigScreen(
     onAdd: () -> Unit,
-    onEdit: (Long) -> Unit,
+    onEdit: (String) -> Unit,
     onScanQr: () -> Unit,
     viewModel: ConfigViewModel = hiltViewModel()
 ) {
@@ -59,7 +59,7 @@ fun ConfigScreen(
 private fun ConfigScreenContent(
     senders: List<SenderEntity>,
     onAdd: () -> Unit,
-    onEdit: (Long) -> Unit,
+    onEdit: (String) -> Unit,
     onScanQr: () -> Unit
 ) {
     var showQrDialog by remember { mutableStateOf(false) }
@@ -117,10 +117,10 @@ private fun ConfigScreenContent(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(senders, key = { it.id }) { sender ->
+            items(senders, key = { it.email }) { sender ->
                 SenderRow(
                     sender = sender,
-                    onClick = { onEdit(sender.id) }
+                    onClick = { onEdit(sender.email) }
                 )
             }
         }
@@ -243,7 +243,6 @@ private fun ConfigScreenPopulatedPreview() {
         ConfigScreenContent(
             senders = listOf(
                 SenderEntity(
-                    id = 1L,
                     companyName = "Acme Corp",
                     email = "billing@acme.com",
                     receiverEmail = "user@example.com",

@@ -43,7 +43,6 @@ class OverviewViewModelTest {
         val viewModel = viewModel(
             senders = listOf(
                 SenderEntity(
-                    id = 1,
                     companyName = "Acme",
                     email = "orders@acme.example",
                     receiverEmail = "",
@@ -114,10 +113,19 @@ class OverviewViewModelTest {
         override suspend fun update(sender: SenderEntity): Unit =
             throw UnsupportedOperationException()
 
-        override suspend fun getById(id: Long): SenderEntity? =
-            flow.value.firstOrNull { it.id == id }
+        override suspend fun updateByEmail(
+            originalEmail: String,
+            email: String,
+            companyName: String,
+            receiverEmail: String,
+            parser: String,
+            skipKeywords: String
+        ): Int = throw UnsupportedOperationException()
 
-        override suspend fun deleteById(id: Long): Unit =
+        override suspend fun getByEmail(email: String): SenderEntity? =
+            flow.value.firstOrNull { it.email == email }
+
+        override suspend fun deleteByEmail(email: String): Int =
             throw UnsupportedOperationException()
     }
 }

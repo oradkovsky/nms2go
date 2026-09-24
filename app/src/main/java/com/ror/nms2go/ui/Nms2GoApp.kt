@@ -45,7 +45,7 @@ fun Nms2GoApp(
     val currentRoute = backStackEntry?.destination?.route ?: Destinations.OVERVIEW
 
     val isEditingSender: Boolean =
-        backStackEntry?.arguments?.getLong("senderId")?.let { it != -1L } ?: false
+        !backStackEntry?.arguments?.getString("senderEmail").isNullOrBlank()
 
     LaunchedEffect(parsedExcel) {
         if (parsedExcel != null && currentRoute != Destinations.PARSED) {

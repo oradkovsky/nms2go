@@ -39,7 +39,7 @@ class QrScanViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val existing = senderRepository.getAll()
-            val handledIds = mutableSetOf<Long>()
+            val handledEmails = mutableSetOf<String>()
             val seenKeys = mutableSetOf<String>()
             for (item in items) {
                 val company = item.company.trim()
@@ -51,13 +51,13 @@ class QrScanViewModel @Inject constructor(
                 val key = "${email.lowercase()}|${receiver.lowercase()}"
                 if (!seenKeys.add(key)) continue
                 val match = existing.firstOrNull { sender ->
-                    sender.id !in handledIds && (
+                    sender.email !in handledEmails && (
                         sender.email.equals(email, ignoreCase = true) ||
                             (receiver.isNotBlank() && sender.receiverEmail.equals(receiver, ignoreCase = true))
                         )
                 }
                 if (match != null) {
-                    handledIds += match.id
+                    handledEmails += match.email
                     senderRepository.update(
                         match.copy(
                             companyName = company,

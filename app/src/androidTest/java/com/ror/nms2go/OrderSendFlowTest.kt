@@ -214,7 +214,6 @@ class OrderSendFlowTest {
         val ordersState = mutableStateOf<List<SentOrderWithItems>>(emptyList())
         val overviewResultsState = mutableStateOf<List<com.ror.nms2go.data.SenderOverview>>(emptyList())
         val sender = com.ror.nms2go.data.SenderEntity(
-            id = 1,
             companyName = "Test Co",
             email = "sender@example.com"
         )

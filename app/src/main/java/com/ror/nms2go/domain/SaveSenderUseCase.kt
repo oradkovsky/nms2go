@@ -8,6 +8,7 @@ import javax.inject.Inject
 sealed interface SaveSenderResult {
     data object Saved : SaveSenderResult
     data object DuplicateEmail : SaveSenderResult
+    data object InvalidInput : SaveSenderResult
 }
 
 class SaveSenderUseCase @Inject constructor(
@@ -16,11 +17,11 @@ class SaveSenderUseCase @Inject constructor(
     /**
      * @param originalEmail email of the edited row, or null when adding a new sender.
      *
-     * Email is the primary key. A same-key edit performs an update, anything
-     * else performs an insert. A rename (new email) only inserts the new row –
-     * removing the old row belongs to the caller, never to this use case.
-     * Collisions are detected by the database unique constraint and mapped to
-     * [SaveSenderResult.DuplicateEmail].
+     * Insert-or-update only, never delete. A same-key edit and a rename
+     * (email change) are both a single update; collisions are detected by
+     * the database primary key constraint and mapped to
+     * [SaveSenderResult.DuplicateEmail]. Blank company or email is rejected
+     * with [SaveSenderResult.InvalidInput] – both fields are required.
      */
     suspend operator fun invoke(
         originalEmail: String?,
@@ -35,14 +36,32 @@ class SaveSenderUseCase @Inject constructor(
         val receiver = receiverEmail.trim()
         val parserValue = parser.trim()
         val skipValue = skipKeywords.trim()
-        if (company.isBlank() || normalizedEmail.isBlank()) return SaveSenderResult.Saved
+        if (company.isBlank() || normalizedEmail.isBlank()) return SaveSenderResult.InvalidInput
 
-        if (originalEmail != null && originalEmail == normalizedEmail) {
-            val existing = senderRepository.getByEmail(originalEmail)
-            if (existing != null) {
-                try {
-                    senderRepository.update(
-                        existing.copy(
+        try {
+            if (originalEmail == null) {
+                senderRepository.insert(
+                    SenderEntity(
+                        companyName = company,
+                        email = normalizedEmail,
+                        receiverEmail = receiver,
+                        parser = parserValue,
+                        skipKeywords = skipValue
+                    )
+                )
+            } else {
+                val updated = senderRepository.updateByEmail(
+                    originalEmail = originalEmail,
+                    email = normalizedEmail,
+                    companyName = company,
+                    receiverEmail = receiver,
+                    parser = parserValue,
+                    skipKeywords = skipValue
+                )
+                if (updated == 0) {
+                    // Original row is gone (deleted concurrently) – store as new.
+                    senderRepository.insert(
+                        SenderEntity(
                             companyName = company,
                             email = normalizedEmail,
                             receiverEmail = receiver,
@@ -50,27 +69,8 @@ class SaveSenderUseCase @Inject constructor(
                             skipKeywords = skipValue
                         )
                     )
-                } catch (error: SQLiteConstraintException) {
-                    return SaveSenderResult.DuplicateEmail
                 }
-                return SaveSenderResult.Saved
             }
-        }
-
-        val createdAt = originalEmail
-            ?.let { senderRepository.getByEmail(it)?.createdAt }
-            ?: System.currentTimeMillis()
-        try {
-            senderRepository.insert(
-                SenderEntity(
-                    companyName = company,
-                    email = normalizedEmail,
-                    receiverEmail = receiver,
-                    parser = parserValue,
-                    skipKeywords = skipValue,
-                    createdAt = createdAt
-                )
-            )
         } catch (error: SQLiteConstraintException) {
             return SaveSenderResult.DuplicateEmail
         }

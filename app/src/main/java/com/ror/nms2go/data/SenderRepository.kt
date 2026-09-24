@@ -22,7 +22,22 @@ class SenderRepository @Inject constructor(
         senderDao.update(sender)
     }
 
-    suspend fun deleteByEmail(email: String) {
+    suspend fun updateByEmail(
+        originalEmail: String,
+        email: String,
+        companyName: String,
+        receiverEmail: String,
+        parser: String,
+        skipKeywords: String
+    ): Int = senderDao.updateByEmail(
+        originalEmail = originalEmail,
+        email = email,
+        companyName = companyName,
+        receiverEmail = receiverEmail,
+        parser = parser,
+        skipKeywords = skipKeywords
+    )
+
+    suspend fun deleteByEmail(email: String): Int =
         senderDao.deleteByEmail(email)
-    }
 }

@@ -1,5 +1,6 @@
 package com.ror.nms2go.ui.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -87,19 +88,11 @@ fun Nms2GoNavHost(
         composable(Destinations.CONFIG) {
             ConfigScreen(
                 onAdd = {
-                    navController.navigate(
-                        Destinations.CONFIG_DETAIL.replace(
-                            "{senderId}",
-                            "-1"
-                        )
-                    )
+                    navController.navigate("config_detail")
                 },
-                onEdit = { id ->
+                onEdit = { senderEmail ->
                     navController.navigate(
-                        Destinations.CONFIG_DETAIL.replace(
-                            "{senderId}",
-                            "$id"
-                        )
+                        "config_detail?senderEmail=${Uri.encode(senderEmail)}"
                     )
                 },
                 onScanQr = {
@@ -126,7 +119,13 @@ fun Nms2GoNavHost(
         }
         composable(
             route = Destinations.CONFIG_DETAIL,
-            arguments = listOf(navArgument("senderId") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("senderEmail") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) {
             val viewModel: ConfigDetailViewModel = hiltViewModel()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -136,7 +135,7 @@ fun Nms2GoNavHost(
                 onUpdate = { _, company, email, receiver, parser, skipKeywords ->
                     viewModel.save(company, email, receiver, parser, skipKeywords)
                 },
-                onDelete = { viewModel.delete() },
+                onDelete = { email -> viewModel.delete(email) },
                 onBack = { navController.popBackStack() }
             )
         }
