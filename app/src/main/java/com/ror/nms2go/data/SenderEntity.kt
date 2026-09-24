@@ -6,12 +6,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "senders")
 data class SenderEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    @ColumnInfo(name = "company_name")
-    val companyName: String,
+    @PrimaryKey
     @ColumnInfo(name = "email")
     val email: String,
+    @ColumnInfo(name = "company_name")
+    val companyName: String,
     @ColumnInfo(name = "receiver_email")
     val receiverEmail: String = "",
     @ColumnInfo(name = "parser")

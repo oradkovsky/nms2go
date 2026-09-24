@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [SenderEntity::class, SentOrderEntity::class, OrderItemEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -75,6 +75,38 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Sender email becomes the primary key, so the table is rebuilt.
+                // Rows duplicated by email (case-insensitive) are collapsed, keeping
+                // the earliest row – duplicates crash the overview list keyed by email.
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `senders_new` (
+                        `email` TEXT NOT NULL,
+                        `company_name` TEXT NOT NULL,
+                        `receiver_email` TEXT NOT NULL DEFAULT '',
+                        `parser` TEXT NOT NULL DEFAULT '',
+                        `skip_keywords` TEXT NOT NULL DEFAULT '',
+                        `created_at` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`email`)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO senders_new
+                        (email, company_name, receiver_email, parser, skip_keywords, created_at)
+                    SELECT TRIM(email), company_name, receiver_email, parser, skip_keywords, created_at
+                    FROM senders
+                    WHERE id IN (SELECT MAX(id) FROM senders GROUP BY LOWER(TRIM(email)))
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE senders")
+                db.execSQL("ALTER TABLE senders_new RENAME TO senders")
+            }
+        }
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -84,7 +116,13 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "nms2.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+                ).addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6
+                ).build()
                     .also { instance = it }
             }
         }
