@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.domain.SaveSenderUseCase
+import com.ror.nms2go.ui.navigation.DestinationArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +40,7 @@ class ConfigDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val originalEmail: String? =
-        savedStateHandle.get<String>("senderEmail")?.takeIf { it.isNotBlank() }
+        savedStateHandle.get<String>(DestinationArgs.SENDER_EMAIL)?.takeIf { it.isNotBlank() }
 
     private val _uiState: MutableStateFlow<ConfigDetailUiState> = MutableStateFlow(
         if (originalEmail == null) {

@@ -92,7 +92,7 @@ fun Nms2GoNavHost(
                 },
                 onEdit = { senderEmail ->
                     navController.navigate(
-                        "config_detail?senderEmail=${Uri.encode(senderEmail)}"
+                        "config_detail?${DestinationArgs.SENDER_EMAIL}=${Uri.encode(senderEmail)}"
                     )
                 },
                 onScanQr = {
@@ -120,7 +120,7 @@ fun Nms2GoNavHost(
         composable(
             route = Destinations.CONFIG_DETAIL,
             arguments = listOf(
-                navArgument("senderEmail") {
+                navArgument(DestinationArgs.SENDER_EMAIL) {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null

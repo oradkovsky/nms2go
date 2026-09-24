@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.ui.navigation.DestinationArgs
 import com.ror.nms2go.ui.navigation.Destinations
 import com.ror.nms2go.ui.navigation.Nms2GoDrawerContent
 import com.ror.nms2go.ui.navigation.Nms2GoNavHost
@@ -45,7 +46,7 @@ fun Nms2GoApp(
     val currentRoute = backStackEntry?.destination?.route ?: Destinations.OVERVIEW
 
     val isEditingSender: Boolean =
-        !backStackEntry?.arguments?.getString("senderEmail").isNullOrBlank()
+        !backStackEntry?.arguments?.getString(DestinationArgs.SENDER_EMAIL).isNullOrBlank()
 
     LaunchedEffect(parsedExcel) {
         if (parsedExcel != null && currentRoute != Destinations.PARSED) {
