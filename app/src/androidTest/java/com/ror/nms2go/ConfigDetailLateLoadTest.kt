@@ -40,10 +40,9 @@ class ConfigDetailLateLoadTest {
         // Simulate the async DB load completing after first composition.
         uiState.value = ConfigDetailUiState.Content(
             ConfigDetailItem(
-                id = 7L,
                 company = "Acme Corp",
-                email = "billing@acme.com",
-                receiver = "orders@acme.com",
+                inboundEmail = "billing@acme.com",
+                outboundEmail = "orders@acme.com",
                 parser = "",
                 skipKeywords = "відмови"
             ),

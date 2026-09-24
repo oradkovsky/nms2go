@@ -22,7 +22,7 @@ object QrCodec {
     private const val KEY_SKIP_KEYWORDS = "skipKeywords"
 
     fun encode(senders: List<SenderEntity>): String =
-        encodeItems(senders.map { QrSender(it.companyName, it.email, it.receiverEmail, it.parser, it.skipKeywords) })
+        encodeItems(senders.map { QrSender(it.companyName, it.inboundEmail, it.outboundEmail, it.parser, it.skipKeywords) })
 
     fun encodeItems(items: List<QrSender>): String {
         val root = JSONObject()

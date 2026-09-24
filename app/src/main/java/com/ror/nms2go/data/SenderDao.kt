@@ -20,9 +20,34 @@ interface SenderDao {
     @Update
     suspend fun update(sender: SenderEntity)
 
-    @Query("SELECT * FROM senders WHERE id = :id")
-    suspend fun getById(id: Long): SenderEntity?
+    /**
+     * Updates the row identified by [originalEmail], including a possible
+     * email (primary key) change. No delete is involved. A colliding new
+     * email violates the primary key constraint. Returns rows affected.
+     */
+    @Query(
+        """
+        UPDATE senders SET
+            email = :email,
+            company_name = :companyName,
+            receiver_email = :receiverEmail,
+            parser = :parser,
+            skip_keywords = :skipKeywords
+        WHERE email = :originalEmail
+        """
+    )
+    suspend fun updateByEmail(
+        originalEmail: String,
+        email: String,
+        companyName: String,
+        receiverEmail: String,
+        parser: String,
+        skipKeywords: String
+    ): Int
 
-    @Query("DELETE FROM senders WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    @Query("SELECT * FROM senders WHERE email = :email")
+    suspend fun getByEmail(email: String): SenderEntity?
+
+    @Query("DELETE FROM senders WHERE email = :email")
+    suspend fun deleteByEmail(email: String): Int
 }

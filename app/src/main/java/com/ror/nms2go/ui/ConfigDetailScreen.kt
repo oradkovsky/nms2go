@@ -47,8 +47,8 @@ import com.ror.nms2go.ui.theme.ThemedPreview
 fun ConfigDetailScreen(
     uiState: ConfigDetailUiState,
     onAdd: (String, String, String, String, String) -> Unit,
-    onUpdate: (Long, String, String, String, String, String) -> Unit,
-    onDelete: (Long) -> Unit,
+    onUpdate: (String, String, String, String, String, String) -> Unit,
+    onDelete: (String) -> Unit,
     onBack: () -> Unit
 ) {
     when (uiState) {
@@ -88,16 +88,16 @@ private fun DetailForm(
     item: ConfigDetailItem,
     isEditing: Boolean,
     onAdd: (String, String, String, String, String) -> Unit,
-    onUpdate: (Long, String, String, String, String, String) -> Unit,
-    onDelete: (Long) -> Unit,
+    onUpdate: (String, String, String, String, String, String) -> Unit,
+    onDelete: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    // Keyed on the item id so fields re-initialize if a different item arrives.
-    var company by rememberSaveable(item.id) { mutableStateOf(item.company) }
-    var email by rememberSaveable(item.id) { mutableStateOf(item.email) }
-    var receiver by rememberSaveable(item.id) { mutableStateOf(item.receiver) }
-    var parser by rememberSaveable(item.id) { mutableStateOf(item.parser) }
-    var skipKeywords by rememberSaveable(item.id) { mutableStateOf(item.skipKeywords) }
+    // Keyed on the item email so fields re-initialize if a different item arrives.
+    var company by rememberSaveable(item.inboundEmail) { mutableStateOf(item.company) }
+    var inboundEmail by rememberSaveable(item.inboundEmail) { mutableStateOf(item.inboundEmail) }
+    var outboundEmail by rememberSaveable(item.inboundEmail) { mutableStateOf(item.outboundEmail) }
+    var parser by rememberSaveable(item.inboundEmail) { mutableStateOf(item.parser) }
+    var skipKeywords by rememberSaveable(item.inboundEmail) { mutableStateOf(item.skipKeywords) }
 
     Column(
         modifier = Modifier
@@ -115,8 +115,8 @@ private fun DetailForm(
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = inboundEmail,
+            onValueChange = { inboundEmail = it },
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.config_sender_label)) },
             singleLine = true,
@@ -124,8 +124,8 @@ private fun DetailForm(
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = receiver,
-            onValueChange = { receiver = it },
+            value = outboundEmail,
+            onValueChange = { outboundEmail = it },
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.config_receiver_label)) },
             singleLine = true,
@@ -155,13 +155,13 @@ private fun DetailForm(
             OutlinedButton(
                 onClick = {
                     if (isEditing) {
-                        onUpdate(item.id, company, email, receiver, parser, skipKeywords)
+                        onUpdate(item.inboundEmail, company, inboundEmail, outboundEmail, parser, skipKeywords)
                     } else {
-                        onAdd(company, email, receiver, parser, skipKeywords)
+                        onAdd(company, inboundEmail, outboundEmail, parser, skipKeywords)
                     }
                     onBack()
                 },
-                enabled = company.isNotBlank() && email.isNotBlank(),
+                enabled = company.isNotBlank() && inboundEmail.isNotBlank(),
                 modifier = Modifier.weight(1f, fill = false)
             ) {
                 Icon(
@@ -180,7 +180,7 @@ private fun DetailForm(
                 Spacer(Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = {
-                        onDelete(item.id)
+                        onDelete(item.inboundEmail)
                         onBack()
                     },
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -240,10 +240,9 @@ private fun ConfigDetailScreenEditPreview() {
         ConfigDetailScreen(
             uiState = ConfigDetailUiState.Content(
                 ConfigDetailItem(
-                    id = 1L,
                     company = "Acme Corp",
-                    email = "billing@acme.com",
-                    receiver = "user@example.com",
+                    inboundEmail = "billing@acme.com",
+                    outboundEmail = "user@example.com",
                     parser = ""
                 ),
                 isEditing = true

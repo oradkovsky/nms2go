@@ -47,7 +47,7 @@ import com.ror.nms2go.utils.generateQrCode
 @Composable
 fun ConfigScreen(
     onAdd: () -> Unit,
-    onEdit: (Long) -> Unit,
+    onEdit: (String) -> Unit,
     onScanQr: () -> Unit,
     viewModel: ConfigViewModel = hiltViewModel()
 ) {
@@ -59,7 +59,7 @@ fun ConfigScreen(
 private fun ConfigScreenContent(
     senders: List<SenderEntity>,
     onAdd: () -> Unit,
-    onEdit: (Long) -> Unit,
+    onEdit: (String) -> Unit,
     onScanQr: () -> Unit
 ) {
     var showQrDialog by remember { mutableStateOf(false) }
@@ -117,10 +117,10 @@ private fun ConfigScreenContent(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(senders, key = { it.id }) { sender ->
+            items(senders, key = { it.inboundEmail }) { sender ->
                 SenderRow(
                     sender = sender,
-                    onClick = { onEdit(sender.id) }
+                    onClick = { onEdit(sender.inboundEmail) }
                 )
             }
         }
@@ -213,14 +213,14 @@ private fun SenderRow(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "${stringResource(R.string.config_row_sender)}: ${sender.email}",
+                    text = "${stringResource(R.string.config_row_sender)}: ${sender.inboundEmail}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${stringResource(R.string.config_row_recipient)}: ${sender.receiverEmail.ifBlank { "—" }}",
+                    text = "${stringResource(R.string.config_row_recipient)}: ${sender.outboundEmail.ifBlank { "—" }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -243,10 +243,9 @@ private fun ConfigScreenPopulatedPreview() {
         ConfigScreenContent(
             senders = listOf(
                 SenderEntity(
-                    id = 1L,
                     companyName = "Acme Corp",
-                    email = "billing@acme.com",
-                    receiverEmail = "user@example.com",
+                    inboundEmail = "billing@acme.com",
+                    outboundEmail = "user@example.com",
                     parser = "PDF_PARSER_V1",
                     createdAt = 1700000000000L
                 )

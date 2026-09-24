@@ -214,9 +214,8 @@ class OrderSendFlowTest {
         val ordersState = mutableStateOf<List<SentOrderWithItems>>(emptyList())
         val overviewResultsState = mutableStateOf<List<com.ror.nms2go.data.SenderOverview>>(emptyList())
         val sender = com.ror.nms2go.data.SenderEntity(
-            id = 1,
             companyName = "Test Co",
-            email = "sender@example.com"
+            inboundEmail = "sender@example.com"
         )
         FakeSenders.senders.value = listOf(sender)
         val parsedExcel = ParsedExcel(
@@ -237,10 +236,10 @@ class OrderSendFlowTest {
         )
         fun createOverview(): com.ror.nms2go.data.SenderOverview =
             com.ror.nms2go.data.SenderOverview(
-                senderQuery = sender.email,
+                senderQuery = sender.inboundEmail,
                 messageId = "msg1",
                 subject = "Price list 01-01-2024",
-                from = sender.email,
+                from = sender.inboundEmail,
                 date = "01.01.2024 10:00",
                 hasAttachment = true,
                 status = com.ror.nms2go.data.SenderOverview.Status.FOUND,

@@ -131,7 +131,7 @@ class OrderWorkflowViewModel @Inject constructor(
 
     fun startOrderForOverview(overview: SenderOverview) {
         viewModelScope.launch {
-            val sender = senderRepository.getAll().firstOrNull { it.email == overview.senderQuery }
+            val sender = senderRepository.getAll().firstOrNull { it.inboundEmail == overview.senderQuery }
             startOrder(listOf(OrderItem(overview, sender?.parser.orEmpty(), sender)))
         }
     }
@@ -139,7 +139,7 @@ class OrderWorkflowViewModel @Inject constructor(
     fun startOrderFromOverview() {
         viewModelScope.launch {
             val senders = senderRepository.getAll()
-            val senderByEmail = senders.associateBy { it.email }
+            val senderByEmail = senders.associateBy { it.inboundEmail }
             val items = uiState.value.overviewResults
                 .filter { it.status == SenderOverview.Status.FOUND && it.messageId != null }
                 .map { overview ->
@@ -227,7 +227,7 @@ class OrderWorkflowViewModel @Inject constructor(
     }
 
     private suspend fun loadOverview(senders: List<SenderEntity>, accessToken: String) {
-        val label = if (senders.size == 1) senders.first().email else "${senders.size} senders"
+        val label = if (senders.size == 1) senders.first().inboundEmail else "${senders.size} senders"
         updateState {
             it.copy(
                 statusText = context.getString(
@@ -315,7 +315,7 @@ class OrderWorkflowViewModel @Inject constructor(
                     continue
                 }
 
-                val receiver = item.sender?.receiverEmail.orEmpty()
+                val receiver = item.sender?.outboundEmail.orEmpty()
                 val company = item.sender?.companyName.orEmpty()
                 allRows += parsed.rows.map { it.copy(receiver = receiver, company = company) }
                 supplierWithDates.putIfAbsent(parsed.supplier, emailDate)
@@ -407,8 +407,8 @@ class OrderWorkflowViewModel @Inject constructor(
                 val company = key.second
                 val name = company.ifBlank { items.first().value.counteragent }
                 val senderEmail = configuredSenders
-                    .firstOrNull { it.receiverEmail == receiver }
-                    ?.email.orEmpty()
+                    .firstOrNull { it.outboundEmail == receiver }
+                    ?.inboundEmail.orEmpty()
                 val subject = context.getString(R.string.order_subject, name, timestamp)
                 if (receiver.isBlank()) {
                     errors += "$name: ${context.getString(R.string.order_no_receiver)}"

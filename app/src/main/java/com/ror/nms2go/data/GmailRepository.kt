@@ -20,7 +20,7 @@ class GmailRepository @Inject constructor(
         client.loadOverviewForLookups(
             senders.map { sender ->
                 SenderLookup(
-                    email = sender.email,
+                    email = sender.inboundEmail,
                     skipKeywords = GmailApiClient.parseSkipKeywords(sender.skipKeywords)
                 )
             },

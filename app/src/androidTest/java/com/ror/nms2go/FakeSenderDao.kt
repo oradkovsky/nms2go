@@ -1,5 +1,6 @@
 package com.ror.nms2go
 
+import android.database.sqlite.SQLiteConstraintException
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import kotlinx.coroutines.flow.Flow
@@ -27,19 +28,53 @@ class FakeSenderDao : SenderDao {
 
     override suspend fun insert(sender: SenderEntity): Long {
         FakeSenders.senders.update { it + sender }
-        return sender.id
+        return 1L
     }
 
     override suspend fun update(sender: SenderEntity) {
         FakeSenders.senders.update { list ->
-            list.map { if (it.id == sender.id) sender else it }
+            list.map { if (it.inboundEmail == sender.inboundEmail) sender else it }
         }
     }
 
-    override suspend fun getById(id: Long): SenderEntity? =
-        FakeSenders.senders.value.firstOrNull { it.id == id }
+    override suspend fun updateByEmail(
+        originalEmail: String,
+        email: String,
+        companyName: String,
+        receiverEmail: String,
+        parser: String,
+        skipKeywords: String
+    ): Int {
+        val current = FakeSenders.senders.value
+        val existing = current.firstOrNull { it.inboundEmail == originalEmail } ?: return 0
+        if (email != originalEmail && current.any { it.inboundEmail == email }) {
+            throw SQLiteConstraintException("Duplicate sender email: $email")
+        }
+        FakeSenders.senders.update { list ->
+            list.map {
+                if (it.inboundEmail == originalEmail) {
+                    existing.copy(
+                        inboundEmail = email,
+                        companyName = companyName,
+                        outboundEmail = receiverEmail,
+                        parser = parser,
+                        skipKeywords = skipKeywords
+                    )
+                } else {
+                    it
+                }
+            }
+        }
+        return 1
+    }
 
-    override suspend fun deleteById(id: Long) {
-        FakeSenders.senders.update { list -> list.filterNot { it.id == id } }
+    override suspend fun getByEmail(email: String): SenderEntity? =
+        FakeSenders.senders.value.firstOrNull { it.inboundEmail == email }
+
+    override suspend fun deleteByEmail(email: String): Int {
+        val current = FakeSenders.senders.value
+        val remaining = current.filterNot { it.inboundEmail == email }
+        FakeSenders.senders.value = remaining
+        return current.size - remaining.size
     }
 }

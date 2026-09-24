@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.domain.SaveSenderUseCase
+import com.ror.nms2go.ui.navigation.DestinationArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,10 +19,9 @@ import kotlinx.coroutines.launch
  * mapping from [SenderEntity] happens here, in [ConfigDetailViewModel].
  */
 data class ConfigDetailItem(
-    val id: Long = -1L,
     val company: String = "",
-    val email: String = "",
-    val receiver: String = "",
+    val inboundEmail: String = "",
+    val outboundEmail: String = "",
     val parser: String = "",
     val skipKeywords: String = ""
 )
@@ -39,10 +39,11 @@ class ConfigDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val senderId: Long = savedStateHandle.get<Long>("senderId") ?: -1L
+    private val originalEmail: String? =
+        savedStateHandle.get<String>(DestinationArgs.SENDER_EMAIL)?.takeIf { it.isNotBlank() }
 
     private val _uiState: MutableStateFlow<ConfigDetailUiState> = MutableStateFlow(
-        if (senderId == -1L) {
+        if (originalEmail == null) {
             ConfigDetailUiState.Content(ConfigDetailItem(), isEditing = false)
         } else {
             ConfigDetailUiState.Loading
@@ -51,9 +52,9 @@ class ConfigDetailViewModel @Inject constructor(
     val uiState: StateFlow<ConfigDetailUiState> = _uiState.asStateFlow()
 
     init {
-        if (senderId != -1L) {
+        if (originalEmail != null) {
             viewModelScope.launch {
-                val entity = senderRepository.getById(senderId)
+                val entity = senderRepository.getByEmail(originalEmail)
                 _uiState.value = if (entity == null) {
                     ConfigDetailUiState.NotFound
                 } else {
@@ -72,28 +73,26 @@ class ConfigDetailViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             saveSenderUseCase(
-                senderId = senderId,
+                inboundEmailBeforeChange = originalEmail,
                 companyName = companyName,
-                email = email,
-                receiverEmail = receiverEmail,
+                inboundEmail = email,
+                outboundEmail = receiverEmail,
                 parser = parser,
                 skipKeywords = skipKeywords
             )
         }
     }
 
-    fun delete() {
-        if (senderId == -1L) return
+    fun delete(email: String) {
         viewModelScope.launch {
-            senderRepository.deleteById(senderId)
+            senderRepository.deleteByEmail(email)
         }
     }
 
     private fun SenderEntity.toUiItem() = ConfigDetailItem(
-        id = id,
         company = companyName,
-        email = email,
-        receiver = receiverEmail,
+        inboundEmail = inboundEmail,
+        outboundEmail = outboundEmail,
         parser = parser,
         skipKeywords = skipKeywords
     )

@@ -16,13 +16,28 @@ class SenderRepository @Inject constructor(
         senderDao.insert(sender)
     }
 
-    suspend fun getById(id: Long): SenderEntity? = senderDao.getById(id)
+    suspend fun getByEmail(email: String): SenderEntity? = senderDao.getByEmail(email)
 
     suspend fun update(sender: SenderEntity) {
         senderDao.update(sender)
     }
 
-    suspend fun deleteById(id: Long) {
-        senderDao.deleteById(id)
-    }
+    suspend fun updateByEmail(
+        originalEmail: String,
+        email: String,
+        companyName: String,
+        receiverEmail: String,
+        parser: String,
+        skipKeywords: String
+    ): Int = senderDao.updateByEmail(
+        originalEmail = originalEmail,
+        email = email,
+        companyName = companyName,
+        receiverEmail = receiverEmail,
+        parser = parser,
+        skipKeywords = skipKeywords
+    )
+
+    suspend fun deleteByEmail(email: String): Int =
+        senderDao.deleteByEmail(email)
 }
