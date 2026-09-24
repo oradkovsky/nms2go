@@ -9,6 +9,7 @@ sealed interface SaveSenderResult {
     data object Saved : SaveSenderResult
     data object DuplicateEmail : SaveSenderResult
     data object InvalidInput : SaveSenderResult
+    data class StorageError(val cause: Throwable) : SaveSenderResult
 }
 
 class SaveSenderUseCase @Inject constructor(
@@ -18,10 +19,12 @@ class SaveSenderUseCase @Inject constructor(
      * @param originalEmail email of the edited row, or null when adding a new sender.
      *
      * Insert-or-update only, never delete. A same-key edit and a rename
-     * (email change) are both a single update; collisions are detected by
-     * the database primary key constraint and mapped to
-     * [SaveSenderResult.DuplicateEmail]. Blank company or email is rejected
-     * with [SaveSenderResult.InvalidInput] – both fields are required.
+     * (email change) are both a single update; the database reports
+     * constraint violations, which are classified afterwards: a conflicting
+     * row under the new email maps to [SaveSenderResult.DuplicateEmail],
+     * any other constraint failure to [SaveSenderResult.StorageError].
+     * Blank company or email is rejected with
+     * [SaveSenderResult.InvalidInput] – both fields are required.
      */
     suspend operator fun invoke(
         originalEmail: String?,
@@ -50,7 +53,7 @@ class SaveSenderUseCase @Inject constructor(
                     )
                 )
             } else {
-                val updated = senderRepository.updateByEmail(
+                senderRepository.updateByEmail(
                     originalEmail = originalEmail,
                     email = normalizedEmail,
                     companyName = company,
@@ -58,21 +61,16 @@ class SaveSenderUseCase @Inject constructor(
                     parser = parserValue,
                     skipKeywords = skipValue
                 )
-                if (updated == 0) {
-                    // Original row is gone (deleted concurrently) – store as new.
-                    senderRepository.insert(
-                        SenderEntity(
-                            companyName = company,
-                            email = normalizedEmail,
-                            receiverEmail = receiver,
-                            parser = parserValue,
-                            skipKeywords = skipValue
-                        )
-                    )
-                }
             }
         } catch (error: SQLiteConstraintException) {
-            return SaveSenderResult.DuplicateEmail
+            // A constraint violation is not necessarily the email key –
+            // confirm a conflicting row before reporting a duplicate.
+            val conflicting = senderRepository.getByEmail(normalizedEmail)
+            return if (conflicting != null && conflicting.email != originalEmail) {
+                SaveSenderResult.DuplicateEmail
+            } else {
+                SaveSenderResult.StorageError(error)
+            }
         }
         return SaveSenderResult.Saved
     }
