@@ -20,8 +20,8 @@ import kotlinx.coroutines.launch
  */
 data class ConfigDetailItem(
     val company: String = "",
-    val email: String = "",
-    val receiver: String = "",
+    val inboundEmail: String = "",
+    val outboundEmail: String = "",
     val parser: String = "",
     val skipKeywords: String = ""
 )
@@ -73,10 +73,10 @@ class ConfigDetailViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             saveSenderUseCase(
-                originalEmail = originalEmail,
+                inboundEmailBeforeChange = originalEmail,
                 companyName = companyName,
-                email = email,
-                receiverEmail = receiverEmail,
+                inboundEmail = email,
+                outboundEmail = receiverEmail,
                 parser = parser,
                 skipKeywords = skipKeywords
             )
@@ -91,8 +91,8 @@ class ConfigDetailViewModel @Inject constructor(
 
     private fun SenderEntity.toUiItem() = ConfigDetailItem(
         company = companyName,
-        email = email,
-        receiver = receiverEmail,
+        inboundEmail = inboundEmail,
+        outboundEmail = outboundEmail,
         parser = parser,
         skipKeywords = skipKeywords
     )

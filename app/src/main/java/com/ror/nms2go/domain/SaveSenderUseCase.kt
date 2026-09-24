@@ -16,7 +16,7 @@ class SaveSenderUseCase @Inject constructor(
     private val senderRepository: SenderRepository
 ) {
     /**
-     * @param originalEmail email of the edited row, or null when adding a new sender.
+     * @param inboundEmailBeforeChange email of the edited row, or null when adding a new sender.
      *
      * Insert-or-update only, never delete. A same-key edit and a rename
      * (email change) are both a single update; the database reports
@@ -27,34 +27,34 @@ class SaveSenderUseCase @Inject constructor(
      * [SaveSenderResult.InvalidInput] – both fields are required.
      */
     suspend operator fun invoke(
-        originalEmail: String?,
+        inboundEmailBeforeChange: String?,
         companyName: String,
-        email: String,
-        receiverEmail: String,
+        inboundEmail: String,
+        outboundEmail: String,
         parser: String,
         skipKeywords: String = ""
     ): SaveSenderResult {
         val company = companyName.trim()
-        val normalizedEmail = email.trim()
-        val receiver = receiverEmail.trim()
+        val normalizedEmail = inboundEmail.trim()
+        val receiver = outboundEmail.trim()
         val parserValue = parser.trim()
         val skipValue = skipKeywords.trim()
         if (company.isBlank() || normalizedEmail.isBlank()) return SaveSenderResult.InvalidInput
 
         try {
-            if (originalEmail == null) {
+            if (inboundEmailBeforeChange == null) {
                 senderRepository.insert(
                     SenderEntity(
                         companyName = company,
-                        email = normalizedEmail,
-                        receiverEmail = receiver,
+                        inboundEmail = normalizedEmail,
+                        outboundEmail = receiver,
                         parser = parserValue,
                         skipKeywords = skipValue
                     )
                 )
             } else {
                 senderRepository.updateByEmail(
-                    originalEmail = originalEmail,
+                    originalEmail = inboundEmailBeforeChange,
                     email = normalizedEmail,
                     companyName = company,
                     receiverEmail = receiver,
@@ -66,7 +66,7 @@ class SaveSenderUseCase @Inject constructor(
             // A constraint violation is not necessarily the email key –
             // confirm a conflicting row before reporting a duplicate.
             val conflicting = senderRepository.getByEmail(normalizedEmail)
-            return if (conflicting != null && conflicting.email != originalEmail) {
+            return if (conflicting != null && conflicting.inboundEmail != inboundEmailBeforeChange) {
                 SaveSenderResult.DuplicateEmail
             } else {
                 SaveSenderResult.StorageError(error)

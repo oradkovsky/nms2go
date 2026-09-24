@@ -8,11 +8,11 @@ import androidx.room.PrimaryKey
 data class SenderEntity(
     @PrimaryKey
     @ColumnInfo(name = "email")
-    val email: String,
+    val inboundEmail: String,
     @ColumnInfo(name = "company_name")
     val companyName: String,
     @ColumnInfo(name = "receiver_email")
-    val receiverEmail: String = "",
+    val outboundEmail: String = "",
     @ColumnInfo(name = "parser")
     val parser: String = "",
     @ColumnInfo(name = "skip_keywords")

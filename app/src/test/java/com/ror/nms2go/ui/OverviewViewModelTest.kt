@@ -44,8 +44,8 @@ class OverviewViewModelTest {
             senders = listOf(
                 SenderEntity(
                     companyName = "Acme",
-                    email = "orders@acme.example",
-                    receiverEmail = "",
+                    inboundEmail = "orders@acme.example",
+                    outboundEmail = "",
                     parser = ""
                 )
             )
@@ -123,7 +123,7 @@ class OverviewViewModelTest {
         ): Int = throw UnsupportedOperationException()
 
         override suspend fun getByEmail(email: String): SenderEntity? =
-            flow.value.firstOrNull { it.email == email }
+            flow.value.firstOrNull { it.inboundEmail == email }
 
         override suspend fun deleteByEmail(email: String): Int =
             throw UnsupportedOperationException()

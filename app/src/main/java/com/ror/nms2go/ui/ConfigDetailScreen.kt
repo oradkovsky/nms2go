@@ -93,11 +93,11 @@ private fun DetailForm(
     onBack: () -> Unit
 ) {
     // Keyed on the item email so fields re-initialize if a different item arrives.
-    var company by rememberSaveable(item.email) { mutableStateOf(item.company) }
-    var email by rememberSaveable(item.email) { mutableStateOf(item.email) }
-    var receiver by rememberSaveable(item.email) { mutableStateOf(item.receiver) }
-    var parser by rememberSaveable(item.email) { mutableStateOf(item.parser) }
-    var skipKeywords by rememberSaveable(item.email) { mutableStateOf(item.skipKeywords) }
+    var company by rememberSaveable(item.inboundEmail) { mutableStateOf(item.company) }
+    var inboundEmail by rememberSaveable(item.inboundEmail) { mutableStateOf(item.inboundEmail) }
+    var outboundEmail by rememberSaveable(item.inboundEmail) { mutableStateOf(item.outboundEmail) }
+    var parser by rememberSaveable(item.inboundEmail) { mutableStateOf(item.parser) }
+    var skipKeywords by rememberSaveable(item.inboundEmail) { mutableStateOf(item.skipKeywords) }
 
     Column(
         modifier = Modifier
@@ -115,8 +115,8 @@ private fun DetailForm(
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = inboundEmail,
+            onValueChange = { inboundEmail = it },
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.config_sender_label)) },
             singleLine = true,
@@ -124,8 +124,8 @@ private fun DetailForm(
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = receiver,
-            onValueChange = { receiver = it },
+            value = outboundEmail,
+            onValueChange = { outboundEmail = it },
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.config_receiver_label)) },
             singleLine = true,
@@ -155,13 +155,13 @@ private fun DetailForm(
             OutlinedButton(
                 onClick = {
                     if (isEditing) {
-                        onUpdate(item.email, company, email, receiver, parser, skipKeywords)
+                        onUpdate(item.inboundEmail, company, inboundEmail, outboundEmail, parser, skipKeywords)
                     } else {
-                        onAdd(company, email, receiver, parser, skipKeywords)
+                        onAdd(company, inboundEmail, outboundEmail, parser, skipKeywords)
                     }
                     onBack()
                 },
-                enabled = company.isNotBlank() && email.isNotBlank(),
+                enabled = company.isNotBlank() && inboundEmail.isNotBlank(),
                 modifier = Modifier.weight(1f, fill = false)
             ) {
                 Icon(
@@ -180,7 +180,7 @@ private fun DetailForm(
                 Spacer(Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = {
-                        onDelete(item.email)
+                        onDelete(item.inboundEmail)
                         onBack()
                     },
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -241,8 +241,8 @@ private fun ConfigDetailScreenEditPreview() {
             uiState = ConfigDetailUiState.Content(
                 ConfigDetailItem(
                     company = "Acme Corp",
-                    email = "billing@acme.com",
-                    receiver = "user@example.com",
+                    inboundEmail = "billing@acme.com",
+                    outboundEmail = "user@example.com",
                     parser = ""
                 ),
                 isEditing = true

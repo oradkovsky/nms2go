@@ -9,7 +9,7 @@ class OverviewInvalidationTest {
 
     private fun sender(email: String) = SenderEntity(
         companyName = "Company $email",
-        email = email
+        inboundEmail = email
     )
 
     @Test

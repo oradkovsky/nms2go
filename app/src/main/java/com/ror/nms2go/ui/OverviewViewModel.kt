@@ -108,7 +108,7 @@ class OverviewViewModel @Inject constructor(
             items = currentResults.map { overview ->
                 OverviewUiItem(
                     senderQuery = overview.senderQuery,
-                    companyName = currentSenders.firstOrNull { it.email == overview.senderQuery }?.companyName,
+                    companyName = currentSenders.firstOrNull { it.inboundEmail == overview.senderQuery }?.companyName,
                     subject = overview.subject?.let { displaySubject(it, overview.date) },
                     date = overview.date,
                     status = overview.status.toUiItemStatus()

@@ -33,7 +33,7 @@ class FakeSenderDao : SenderDao {
 
     override suspend fun update(sender: SenderEntity) {
         FakeSenders.senders.update { list ->
-            list.map { if (it.email == sender.email) sender else it }
+            list.map { if (it.inboundEmail == sender.inboundEmail) sender else it }
         }
     }
 
@@ -46,17 +46,17 @@ class FakeSenderDao : SenderDao {
         skipKeywords: String
     ): Int {
         val current = FakeSenders.senders.value
-        val existing = current.firstOrNull { it.email == originalEmail } ?: return 0
-        if (email != originalEmail && current.any { it.email == email }) {
+        val existing = current.firstOrNull { it.inboundEmail == originalEmail } ?: return 0
+        if (email != originalEmail && current.any { it.inboundEmail == email }) {
             throw SQLiteConstraintException("Duplicate sender email: $email")
         }
         FakeSenders.senders.update { list ->
             list.map {
-                if (it.email == originalEmail) {
+                if (it.inboundEmail == originalEmail) {
                     existing.copy(
-                        email = email,
+                        inboundEmail = email,
                         companyName = companyName,
-                        receiverEmail = receiverEmail,
+                        outboundEmail = receiverEmail,
                         parser = parser,
                         skipKeywords = skipKeywords
                     )
@@ -69,11 +69,11 @@ class FakeSenderDao : SenderDao {
     }
 
     override suspend fun getByEmail(email: String): SenderEntity? =
-        FakeSenders.senders.value.firstOrNull { it.email == email }
+        FakeSenders.senders.value.firstOrNull { it.inboundEmail == email }
 
     override suspend fun deleteByEmail(email: String): Int {
         val current = FakeSenders.senders.value
-        val remaining = current.filterNot { it.email == email }
+        val remaining = current.filterNot { it.inboundEmail == email }
         FakeSenders.senders.value = remaining
         return current.size - remaining.size
     }

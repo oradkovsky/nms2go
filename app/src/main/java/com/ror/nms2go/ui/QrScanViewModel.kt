@@ -51,18 +51,18 @@ class QrScanViewModel @Inject constructor(
                 val key = "${email.lowercase()}|${receiver.lowercase()}"
                 if (!seenKeys.add(key)) continue
                 val match = existing.firstOrNull { sender ->
-                    sender.email !in handledEmails && (
-                        sender.email.equals(email, ignoreCase = true) ||
-                            (receiver.isNotBlank() && sender.receiverEmail.equals(receiver, ignoreCase = true))
+                    sender.inboundEmail !in handledEmails && (
+                        sender.inboundEmail.equals(email, ignoreCase = true) ||
+                            (receiver.isNotBlank() && sender.outboundEmail.equals(receiver, ignoreCase = true))
                         )
                 }
                 if (match != null) {
-                    handledEmails += match.email
+                    handledEmails += match.inboundEmail
                     senderRepository.update(
                         match.copy(
                             companyName = company,
-                            email = email,
-                            receiverEmail = receiver,
+                            inboundEmail = email,
+                            outboundEmail = receiver,
                             parser = parser,
                             skipKeywords = skipKeywords
                         )
@@ -71,8 +71,8 @@ class QrScanViewModel @Inject constructor(
                     senderRepository.insert(
                         SenderEntity(
                             companyName = company,
-                            email = email,
-                            receiverEmail = receiver,
+                            inboundEmail = email,
+                            outboundEmail = receiver,
                             parser = parser,
                             skipKeywords = skipKeywords
                         )

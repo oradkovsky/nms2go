@@ -41,8 +41,8 @@ class ConfigDetailLateLoadTest {
         uiState.value = ConfigDetailUiState.Content(
             ConfigDetailItem(
                 company = "Acme Corp",
-                email = "billing@acme.com",
-                receiver = "orders@acme.com",
+                inboundEmail = "billing@acme.com",
+                outboundEmail = "orders@acme.com",
                 parser = "",
                 skipKeywords = "відмови"
             ),

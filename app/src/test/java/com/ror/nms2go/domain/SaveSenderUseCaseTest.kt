@@ -22,10 +22,10 @@ class SaveSenderUseCaseTest {
     @Test
     fun insertNewSender_returnsSavedAndStoresTrimmed() = runTest {
         val result = useCase(
-            originalEmail = null,
+            inboundEmailBeforeChange = null,
             companyName = "  Acme Corp ",
-            email = " billing@acme.com ",
-            receiverEmail = " orders@acme.com ",
+            inboundEmail = " billing@acme.com ",
+            outboundEmail = " orders@acme.com ",
             parser = "PDF_PARSER_V1",
             skipKeywords = " gift "
         )
@@ -33,8 +33,8 @@ class SaveSenderUseCaseTest {
         assertEquals(SaveSenderResult.Saved, result)
         val stored = dao.getByEmail("billing@acme.com")
         assertEquals("Acme Corp", stored?.companyName)
-        assertEquals("billing@acme.com", stored?.email)
-        assertEquals("orders@acme.com", stored?.receiverEmail)
+        assertEquals("billing@acme.com", stored?.inboundEmail)
+        assertEquals("orders@acme.com", stored?.outboundEmail)
         assertEquals("PDF_PARSER_V1", stored?.parser)
         assertEquals("gift", stored?.skipKeywords)
     }
@@ -42,10 +42,10 @@ class SaveSenderUseCaseTest {
     @Test
     fun blankCompany_returnsInvalidInputAndStoresNothing() = runTest {
         val result = useCase(
-            originalEmail = null,
+            inboundEmailBeforeChange = null,
             companyName = "   ",
-            email = "billing@acme.com",
-            receiverEmail = "",
+            inboundEmail = "billing@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -56,10 +56,10 @@ class SaveSenderUseCaseTest {
     @Test
     fun blankEmail_returnsInvalidInputAndStoresNothing() = runTest {
         val result = useCase(
-            originalEmail = null,
+            inboundEmailBeforeChange = null,
             companyName = "Acme Corp",
-            email = "  ",
-            receiverEmail = "",
+            inboundEmail = "  ",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -72,17 +72,17 @@ class SaveSenderUseCaseTest {
         dao.seed(sender(email = "billing@acme.com", createdAt = 123L))
 
         val result = useCase(
-            originalEmail = "billing@acme.com",
+            inboundEmailBeforeChange = "billing@acme.com",
             companyName = "Acme Updated",
-            email = "billing@acme.com",
-            receiverEmail = "new@acme.com",
+            inboundEmail = "billing@acme.com",
+            outboundEmail = "new@acme.com",
             parser = "PDF_PARSER_V1"
         )
 
         assertEquals(SaveSenderResult.Saved, result)
         val stored = dao.getByEmail("billing@acme.com")
         assertEquals("Acme Updated", stored?.companyName)
-        assertEquals("new@acme.com", stored?.receiverEmail)
+        assertEquals("new@acme.com", stored?.outboundEmail)
         assertEquals(123L, stored?.createdAt)
     }
 
@@ -91,10 +91,10 @@ class SaveSenderUseCaseTest {
         dao.seed(sender(email = "old@acme.com", createdAt = 456L))
 
         val result = useCase(
-            originalEmail = "old@acme.com",
+            inboundEmailBeforeChange = "old@acme.com",
             companyName = "Acme Corp",
-            email = "new@acme.com",
-            receiverEmail = "",
+            inboundEmail = "new@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -110,10 +110,10 @@ class SaveSenderUseCaseTest {
         dao.seed(sender(email = "billing@acme.com", company = "Acme Corp"))
 
         val result = useCase(
-            originalEmail = null,
+            inboundEmailBeforeChange = null,
             companyName = "Intruder",
-            email = "billing@acme.com",
-            receiverEmail = "",
+            inboundEmail = "billing@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -129,10 +129,10 @@ class SaveSenderUseCaseTest {
         )
 
         val result = useCase(
-            originalEmail = "a@acme.com",
+            inboundEmailBeforeChange = "a@acme.com",
             companyName = "A renamed",
-            email = "b@acme.com",
-            receiverEmail = "",
+            inboundEmail = "b@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -146,10 +146,10 @@ class SaveSenderUseCaseTest {
         dao.failInserts = true
 
         val result = useCase(
-            originalEmail = null,
+            inboundEmailBeforeChange = null,
             companyName = "Acme Corp",
-            email = "billing@acme.com",
-            receiverEmail = "",
+            inboundEmail = "billing@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -163,10 +163,10 @@ class SaveSenderUseCaseTest {
         dao.failUpdates = true
 
         val result = useCase(
-            originalEmail = "billing@acme.com",
+            inboundEmailBeforeChange = "billing@acme.com",
             companyName = "Acme Corp",
-            email = "billing@acme.com",
-            receiverEmail = "",
+            inboundEmail = "billing@acme.com",
+            outboundEmail = "",
             parser = ""
         )
 
@@ -190,7 +190,7 @@ class SaveSenderUseCaseTest {
         createdAt: Long = 1_000L
     ) = SenderEntity(
         companyName = company,
-        email = email,
+        inboundEmail = email,
         createdAt = createdAt
     )
 
@@ -222,14 +222,14 @@ class SaveSenderUseCaseTest {
         override suspend fun getAll(): List<SenderEntity> = rows.toList()
 
         override suspend fun insert(sender: SenderEntity): Long {
-            if (failInserts || rows.any { it.email == sender.email }) fail()
+            if (failInserts || rows.any { it.inboundEmail == sender.inboundEmail }) fail()
             rows += sender
             flow.value = rows.toList()
             return rows.size.toLong()
         }
 
         override suspend fun update(sender: SenderEntity) {
-            val index = rows.indexOfFirst { it.email == sender.email }
+            val index = rows.indexOfFirst { it.inboundEmail == sender.inboundEmail }
             if (index >= 0) {
                 rows[index] = sender
                 flow.value = rows.toList()
@@ -244,13 +244,13 @@ class SaveSenderUseCaseTest {
             parser: String,
             skipKeywords: String
         ): Int {
-            val index = rows.indexOfFirst { it.email == originalEmail }
+            val index = rows.indexOfFirst { it.inboundEmail == originalEmail }
             if (index < 0) return 0
-            if (failUpdates || (email != originalEmail && rows.any { it.email == email })) fail()
+            if (failUpdates || (email != originalEmail && rows.any { it.inboundEmail == email })) fail()
             rows[index] = rows[index].copy(
-                email = email,
+                inboundEmail = email,
                 companyName = companyName,
-                receiverEmail = receiverEmail,
+                outboundEmail = receiverEmail,
                 parser = parser,
                 skipKeywords = skipKeywords
             )
@@ -259,11 +259,11 @@ class SaveSenderUseCaseTest {
         }
 
         override suspend fun getByEmail(email: String): SenderEntity? =
-            rows.firstOrNull { it.email == email }
+            rows.firstOrNull { it.inboundEmail == email }
 
         override suspend fun deleteByEmail(email: String): Int {
             val before = rows.size
-            rows.removeAll { it.email == email }
+            rows.removeAll { it.inboundEmail == email }
             flow.value = rows.toList()
             return before - rows.size
         }
