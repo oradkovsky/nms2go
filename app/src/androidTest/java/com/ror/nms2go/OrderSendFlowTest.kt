@@ -88,7 +88,6 @@ class OrderSendFlowTest {
         val parsed = mutableStateOf<ParsedExcel?>(null)
         rule.setContent {
             Nms2GoApp(
-                senders = emptyList(),
                 loading = false,
                 statusText = "",
                 overviewResults = emptyList(),
@@ -247,7 +246,6 @@ class OrderSendFlowTest {
             )
         rule.setContent {
             Nms2GoApp(
-                senders = listOf(sender),
                 loading = false,
                 statusText = "",
                 overviewResults = overviewResultsState.value,

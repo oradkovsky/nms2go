@@ -36,7 +36,6 @@ class OverviewNavigationTest {
     fun coldStartEmptyState_configLinkNavigatesToConfiguration() {
         rule.setContent {
             Nms2GoApp(
-                senders = emptyList(),
                 loading = false,
                 statusText = "",
                 overviewResults = emptyList(),
