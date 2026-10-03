@@ -2,12 +2,13 @@ package com.ror.nms2go.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ror.nms2go.data.QrCodec
 import com.ror.nms2go.data.QrSender
-import com.ror.nms2go.data.SenderEntity
-import com.ror.nms2go.data.SenderRepository
+import com.ror.nms2go.di.DefaultDispatcher
+import com.ror.nms2go.domain.ImportSendersFromQrResult
+import com.ror.nms2go.domain.ImportSendersFromQrUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,65 +22,28 @@ sealed interface QrScanUiState {
 
 @HiltViewModel
 class QrScanViewModel @Inject constructor(
-    private val senderRepository: SenderRepository
+    private val importSendersFromQrUseCase: ImportSendersFromQrUseCase,
+    @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<QrScanUiState>(QrScanUiState.Idle)
     val uiState: StateFlow<QrScanUiState> = _uiState.asStateFlow()
 
     /**
-     * Handles raw QR string. Decodes via QrCodec and persists via SenderRepository.
-     * Updates single uiState (Idle/Error/Success) – caller observes uiState for rendering and navigation.
+     * Handles raw QR string. Delegates decode + persist to [ImportSendersFromQrUseCase]
+     * and maps the result to single uiState (Idle/Error/Success).
+     *
+     * Runs off the main thread: the scanner callback arrives on the main executor,
+     * so JSON parsing and DB work are dispatched to [defaultDispatcher].
      */
     fun handleRawScanned(rawValue: String) {
-        val items = QrCodec.decode(rawValue)
-        if (items.isNullOrEmpty()) {
-            _uiState.value = QrScanUiState.Error("Invalid or empty QR code")
-            return
-        }
-        viewModelScope.launch {
-            val existing = senderRepository.getAll()
-            val handledEmails = mutableSetOf<String>()
-            val seenKeys = mutableSetOf<String>()
-            for (item in items) {
-                val company = item.company.trim()
-                val email = item.email.trim()
-                val receiver = item.receiver.trim()
-                val parser = item.parser.trim()
-                val skipKeywords = item.skipKeywords.trim()
-                if (email.isBlank()) continue
-                val key = "${email.lowercase()}|${receiver.lowercase()}"
-                if (!seenKeys.add(key)) continue
-                val match = existing.firstOrNull { sender ->
-                    sender.inboundEmail !in handledEmails && (
-                        sender.inboundEmail.equals(email, ignoreCase = true) ||
-                            (receiver.isNotBlank() && sender.outboundEmail.equals(receiver, ignoreCase = true))
-                        )
-                }
-                if (match != null) {
-                    handledEmails += match.inboundEmail
-                    senderRepository.update(
-                        match.copy(
-                            companyName = company,
-                            inboundEmail = email,
-                            outboundEmail = receiver,
-                            parser = parser,
-                            skipKeywords = skipKeywords
-                        )
-                    )
-                } else {
-                    senderRepository.insert(
-                        SenderEntity(
-                            companyName = company,
-                            inboundEmail = email,
-                            outboundEmail = receiver,
-                            parser = parser,
-                            skipKeywords = skipKeywords
-                        )
-                    )
-                }
+        viewModelScope.launch(defaultDispatcher) {
+            when (val result = importSendersFromQrUseCase(rawValue)) {
+                is ImportSendersFromQrResult.Success ->
+                    _uiState.value = QrScanUiState.Success(result.items)
+                ImportSendersFromQrResult.InvalidQr ->
+                    _uiState.value = QrScanUiState.Error("Invalid or empty QR code")
             }
-            _uiState.value = QrScanUiState.Success(items)
         }
     }
 
