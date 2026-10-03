@@ -13,7 +13,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ror.nms2go.ParsedExcel
-import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.ui.navigation.DestinationArgs
 import com.ror.nms2go.ui.navigation.Destinations
@@ -23,7 +22,6 @@ import com.ror.nms2go.ui.navigation.Nms2GoTopBar
 
 @Composable
 fun Nms2GoApp(
-    senders: List<SenderEntity>,
     loading: Boolean,
     statusText: String,
     overviewResults: List<SenderOverview>,
@@ -115,7 +113,6 @@ fun Nms2GoApp(
                     currentRoute = currentRoute,
                     isEditingSender = isEditingSender,
                     drawerState = drawerState,
-                    senders = senders,
                     loading = loading,
                     overviewResults = overviewResults,
                     orderQuantities = orderQuantities,

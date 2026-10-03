@@ -261,7 +261,6 @@ class ParsedBulkDateTest {
         )
         rule.setContent {
             com.ror.nms2go.ui.Nms2GoApp(
-                senders = emptyList(),
                 loading = true,
                 statusText = "",
                 overviewResults = emptyList(),

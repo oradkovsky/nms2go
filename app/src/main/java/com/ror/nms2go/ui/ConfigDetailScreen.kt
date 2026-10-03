@@ -155,7 +155,14 @@ private fun DetailForm(
             OutlinedButton(
                 onClick = {
                     if (isEditing) {
-                        onUpdate(item.inboundEmail, company, inboundEmail, outboundEmail, parser, skipKeywords)
+                        onUpdate(
+                            item.inboundEmail,
+                            company,
+                            inboundEmail,
+                            outboundEmail,
+                            parser,
+                            skipKeywords
+                        )
                     } else {
                         onAdd(company, inboundEmail, outboundEmail, parser, skipKeywords)
                     }
@@ -207,6 +214,28 @@ private fun DetailForm(
 
 @ThemedPreview
 @Composable
+private fun ConfigDetailScreenEditPreview() {
+    ThemedPreview {
+        ConfigDetailScreen(
+            uiState = ConfigDetailUiState.Content(
+                ConfigDetailItem(
+                    company = "Acme Corp",
+                    inboundEmail = "billing@acme.com",
+                    outboundEmail = "user@example.com",
+                    parser = ""
+                ),
+                isEditing = true
+            ),
+            onAdd = { _, _, _, _, _ -> },
+            onUpdate = { _, _, _, _, _, _ -> },
+            onDelete = {},
+            onBack = {}
+        )
+    }
+}
+
+@ThemedPreview
+@Composable
 private fun ConfigDetailScreenLoadingPreview() {
     ThemedPreview {
         ConfigDetailScreen(
@@ -225,28 +254,6 @@ private fun ConfigDetailScreenAddPreview() {
     ThemedPreview {
         ConfigDetailScreen(
             uiState = ConfigDetailUiState.Content(ConfigDetailItem(), isEditing = false),
-            onAdd = { _, _, _, _, _ -> },
-            onUpdate = { _, _, _, _, _, _ -> },
-            onDelete = {},
-            onBack = {}
-        )
-    }
-}
-
-@ThemedPreview
-@Composable
-private fun ConfigDetailScreenEditPreview() {
-    ThemedPreview {
-        ConfigDetailScreen(
-            uiState = ConfigDetailUiState.Content(
-                ConfigDetailItem(
-                    company = "Acme Corp",
-                    inboundEmail = "billing@acme.com",
-                    outboundEmail = "user@example.com",
-                    parser = ""
-                ),
-                isEditing = true
-            ),
             onAdd = { _, _, _, _, _ -> },
             onUpdate = { _, _, _, _, _, _ -> },
             onDelete = {},

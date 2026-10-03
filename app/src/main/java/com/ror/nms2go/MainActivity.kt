@@ -18,7 +18,6 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.ui.OrderWorkflowViewModel
-import com.ror.nms2go.ui.SenderViewModel
 import com.ror.nms2go.ui.Nms2GoApp
 import com.ror.nms2go.ui.theme.Nms2GoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val authorizationClient by lazy { Identity.getAuthorizationClient(this) }
-    private val senderViewModel: SenderViewModel by viewModels()
     private val workflowViewModel: OrderWorkflowViewModel by viewModels()
 
     private val authorizationLauncher = registerForActivityResult(
@@ -88,7 +86,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val senders by senderViewModel.senders.collectAsState()
             val workflow by workflowViewModel.uiState.collectAsState()
 
             LaunchedEffect(Unit) {
@@ -97,7 +94,6 @@ class MainActivity : ComponentActivity() {
 
             Nms2GoTheme {
                 Nms2GoApp(
-                    senders = senders,
                     loading = workflow.loading,
                     statusText = workflow.statusText,
                     overviewResults = workflow.overviewResults,

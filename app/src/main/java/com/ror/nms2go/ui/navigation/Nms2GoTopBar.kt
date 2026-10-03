@@ -15,11 +15,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ror.nms2go.R
-import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.ui.SenderViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,16 +31,17 @@ fun Nms2GoTopBar(
     currentRoute: String,
     isEditingSender: Boolean,
     drawerState: DrawerState,
-    senders: List<SenderEntity>,
     loading: Boolean,
     overviewResults: List<SenderOverview>,
     orderQuantities: Map<Int, Int>,
     onBack: () -> Unit,
     onNavigateToReview: () -> Unit,
     onOrder: () -> Unit,
-    onLoad: () -> Unit
+    onLoad: () -> Unit,
+    senderViewModel: SenderViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
+    val senders by senderViewModel.senders.collectAsStateWithLifecycle()
 
     CenterAlignedTopAppBar(
         title = {

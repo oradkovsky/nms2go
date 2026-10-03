@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -18,11 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import com.ror.nms2go.R
 import com.ror.nms2go.utils.debugTestTag
@@ -59,28 +61,30 @@ fun OverviewScreen(
             val annotatedString = buildAnnotatedString {
                 append(prefix)
                 append(" ")
-                val start = length
-                append(configuration)
-                addStyle(
-                    SpanStyle(
-                        color = linkColor,
-                        textDecoration = TextDecoration.Underline,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    start = start,
-                    end = length
-                )
-                addStringAnnotation("menu_configuration", "menu_configuration", start, length)
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = "menu_configuration",
+                        styles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = linkColor,
+                                textDecoration = TextDecoration.Underline,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        ),
+                        linkInteractionListener = { onNavigateToConfig() }
+                    )
+                ) {
+                    append(configuration)
+                }
             }
-            ClickableText(
+            Text(
                 text = annotatedString,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 modifier = Modifier
                     .padding(end = 2.dp)
-                    .debugTestTag("emptyStateLink"),
-                onClick = { onNavigateToConfig() }
+                    .debugTestTag("emptyStateLink")
             )
         } else {
             OverviewList(items = uiModel.items, onParseItem = onParseItem)
