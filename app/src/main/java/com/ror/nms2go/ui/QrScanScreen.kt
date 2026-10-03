@@ -52,7 +52,7 @@ fun QrScanScreen(
     var hasPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED
+                    PackageManager.PERMISSION_GRANTED
         )
     }
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -100,12 +100,16 @@ fun QrScanScreen(
         }
 
         (scannerError ?: vmError)?.let { message ->
-            Column(modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)) {
+            Column(modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)) {
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 )
             }
         }
