@@ -31,6 +31,7 @@ import com.ror.nms2go.R
 import com.ror.nms2go.utils.debugTestTag
 
 internal const val ORDER_BUTTON_TAG = "orderButton"
+internal const val REVIEW_LOADING_TAG = "reviewLoading"
 
 private fun Modifier.reviewScreenPadding(): Modifier =
     padding(horizontal = 16.dp, vertical = 12.dp)
@@ -49,8 +50,8 @@ fun ReviewScreen(
     BackHandler(enabled = !showConfirm) { onBack() }
 
     when (uiState) {
-        is ReviewUiState.Empty -> {
-            ReviewEmpty(onBack = onBack)
+        is ReviewUiState.Loading -> {
+            ReviewLoading(onBack = onBack)
         }
 
         is ReviewUiState.Content -> {
@@ -75,7 +76,7 @@ fun ReviewScreen(
 }
 
 @Composable
-private fun ReviewEmpty(onBack: () -> Unit) {
+private fun ReviewLoading(onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -83,10 +84,10 @@ private fun ReviewEmpty(onBack: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.review_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(48.dp)
+                    .debugTestTag(REVIEW_LOADING_TAG)
             )
             Spacer(Modifier.height(12.dp))
             TextButton(onClick = onBack) {
@@ -106,7 +107,10 @@ private fun ReviewError(message: String, onBack: () -> Unit) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = message,
+                // The ViewModel reports "nothing to review" as an error without
+                // a message (it has no access to resources) – fall back to the
+                // guidance text so the screen never renders blank.
+                text = message.ifBlank { stringResource(R.string.review_empty) },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error
             )
@@ -233,9 +237,9 @@ private fun ReviewContentPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun ReviewEmptyPreview() {
+private fun ReviewLoadingPreview() {
     MaterialTheme {
-        ReviewEmpty(onBack = {})
+        ReviewLoading(onBack = {})
     }
 }
 

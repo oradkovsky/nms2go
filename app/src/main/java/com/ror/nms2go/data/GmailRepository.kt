@@ -10,7 +10,7 @@ import javax.inject.Singleton
 @Singleton
 class GmailRepository @Inject constructor(
     @ApplicationContext context: Context
-) {
+) : GmailSender {
     private val client = GmailApiClient(File(context.filesDir, "gmail-attachments"))
 
     fun loadOverviewForSenders(
@@ -33,7 +33,7 @@ class GmailRepository @Inject constructor(
         accessToken: String
     ): File = client.downloadAttachment(messageId, attachment, accessToken)
 
-    fun sendMessage(to: String, subject: String, htmlBody: String, accessToken: String) {
+    override fun sendMessage(to: String, subject: String, htmlBody: String, accessToken: String) {
         client.sendMessage(to, subject, htmlBody, accessToken)
     }
 }

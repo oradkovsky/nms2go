@@ -9,11 +9,9 @@ import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.data.GmailAuthManager
+import com.ror.nms2go.data.GmailAuthResult
 import com.ror.nms2go.data.GmailRepository
-import com.ror.nms2go.data.OrderHistoryItem
-import com.ror.nms2go.data.OrderHistoryRecord
-import com.ror.nms2go.data.OrderHistoryRepository
-import com.ror.nms2go.data.OrderStatus
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.di.IoDispatcher
@@ -27,11 +25,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -54,9 +49,6 @@ data class OrderWorkflowUiState(
     val overviewResults: List<SenderOverview> = emptyList(),
     val parsedExcel: ParsedExcel? = null,
     val orderQuantities: Map<Int, Int> = emptyMap(),
-    val orderSentStamp: Int = 0,
-    val sendingOrders: Boolean = false,
-    val orderSendError: String? = null,
     val orderLoadingProgress: Pair<Int, Int>? = null
 )
 
@@ -65,7 +57,7 @@ class OrderWorkflowViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val senderRepository: SenderRepository,
     private val gmailRepository: GmailRepository,
-    private val orderHistoryRepository: OrderHistoryRepository,
+    private val authManager: GmailAuthManager,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -76,11 +68,6 @@ class OrderWorkflowViewModel @Inject constructor(
         )
     )
     val uiState: StateFlow<OrderWorkflowUiState> = _uiState.asStateFlow()
-
-    private val _authorizationRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val authorizationRequests: SharedFlow<Unit> = _authorizationRequests.asSharedFlow()
-
-    private var pendingAuthorization: PendingAuthorization? = null
 
     // Senders the current overview results were loaded for. Null means "no fresh results":
     // either nothing was loaded yet or the cache was invalidated by a config change.
@@ -113,7 +100,7 @@ class OrderWorkflowViewModel @Inject constructor(
     }
 
     fun loadOverview() {
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             val senders = senderRepository.getAll()
             if (senders.isEmpty()) {
                 updateState {
@@ -124,8 +111,17 @@ class OrderWorkflowViewModel @Inject constructor(
                 }
                 return@launch
             }
-            pendingAuthorization = PendingAuthorization.Overview(senders)
-            requestAuthorization(context.getString(R.string.gmail_requesting_readonly))
+            updateState {
+                it.copy(
+                    loading = true,
+                    statusText = context.getString(R.string.gmail_requesting_readonly)
+                )
+            }
+            when (val auth = authManager.authorize()) {
+                is GmailAuthResult.Authorized -> loadOverview(senders, auth.accessToken)
+                is GmailAuthResult.Failed ->
+                    updateState { it.copy(loading = false, statusText = auth.message) }
+            }
         }
     }
 
@@ -164,53 +160,11 @@ class OrderWorkflowViewModel @Inject constructor(
         }
     }
 
-    fun sendOrders() {
-        val state = uiState.value
-        val parsed = state.parsedExcel ?: return
-        val chosen = parsed.rows.withIndex()
-            .filter { (index, _) -> (state.orderQuantities[index] ?: 0) > 0 }
-        if (chosen.isEmpty()) {
-            updateState { it.copy(statusText = context.getString(R.string.review_empty)) }
-            return
-        }
-
-        pendingAuthorization = PendingAuthorization.Send(chosen, state.orderQuantities)
-        updateState { it.copy(sendingOrders = true, orderSendError = null) }
-        requestAuthorization(context.getString(R.string.order_requesting_access))
-    }
-
-    fun onAuthorizationResult(accessToken: String?) {
-        val action = pendingAuthorization ?: return
-        pendingAuthorization = null
-        if (accessToken.isNullOrBlank()) {
-            failAuthorization(context.getString(R.string.auth_no_token))
-            return
-        }
-
-        viewModelScope.launch(ioDispatcher) {
-            when (action) {
-                is PendingAuthorization.Overview -> loadOverview(action.senders, accessToken)
-                is PendingAuthorization.Parse -> parsePriceLists(action.items, accessToken)
-                is PendingAuthorization.Send -> sendOrders(
-                    action.items,
-                    action.quantities,
-                    accessToken
-                )
-            }
-        }
-    }
-
-    fun onAuthorizationFailure(message: String) {
-        pendingAuthorization = null
-        failAuthorization(message)
-    }
-
     private fun startOrder(items: List<OrderItem>) {
         if (items.isEmpty()) {
             updateState { it.copy(statusText = context.getString(R.string.order_empty)) }
             return
         }
-        pendingAuthorization = PendingAuthorization.Parse(items)
         updateState {
             it.copy(
                 parsedExcel = null,
@@ -218,12 +172,19 @@ class OrderWorkflowViewModel @Inject constructor(
                 orderLoadingProgress = null
             )
         }
-        requestAuthorization(context.getString(R.string.gmail_requesting_access))
-    }
-
-    private fun requestAuthorization(status: String) {
-        updateState { it.copy(loading = true, statusText = status) }
-        _authorizationRequests.tryEmit(Unit)
+        viewModelScope.launch(ioDispatcher) {
+            updateState {
+                it.copy(
+                    loading = true,
+                    statusText = context.getString(R.string.gmail_requesting_access)
+                )
+            }
+            when (val auth = authManager.authorize()) {
+                is GmailAuthResult.Authorized -> parsePriceLists(items, auth.accessToken)
+                is GmailAuthResult.Failed ->
+                    updateState { it.copy(loading = false, statusText = auth.message) }
+            }
+        }
     }
 
     private suspend fun loadOverview(senders: List<SenderEntity>, accessToken: String) {
@@ -390,194 +351,8 @@ class OrderWorkflowViewModel @Inject constructor(
         if (isBulk) updateState { it.copy(orderLoadingProgress = loaded to total) }
     }
 
-    private suspend fun sendOrders(
-        chosen: List<IndexedValue<ExcelRow>>,
-        quantities: Map<Int, Int>,
-        accessToken: String
-    ) {
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
-        val groups = chosen.groupBy { it.value.receiver to it.value.company }
-        try {
-            val configuredSenders = senderRepository.getAll()
-            val sent = mutableListOf<String>()
-            val errors = mutableListOf<String>()
-            for ((key, items) in groups) {
-                coroutineContext.ensureActive()
-                val receiver = key.first
-                val company = key.second
-                val name = company.ifBlank { items.first().value.counteragent }
-                val senderEmail = configuredSenders
-                    .firstOrNull { it.outboundEmail == receiver }
-                    ?.inboundEmail.orEmpty()
-                val subject = context.getString(R.string.order_subject, name, timestamp)
-                if (receiver.isBlank()) {
-                    errors += "$name: ${context.getString(R.string.order_no_receiver)}"
-                    recordOrder(
-                        name,
-                        senderEmail,
-                        receiver,
-                        subject,
-                        OrderStatus.FAILED,
-                        "no receiver configured",
-                        items,
-                        quantities
-                    )
-                    continue
-                }
-                try {
-                    gmailRepository.sendMessage(
-                        receiver,
-                        subject,
-                        buildOrderTableHtml(items, quantities),
-                        accessToken
-                    )
-                    sent += name
-                    recordOrder(
-                        name,
-                        senderEmail,
-                        receiver,
-                        subject,
-                        OrderStatus.SENT,
-                        null,
-                        items,
-                        quantities
-                    )
-                } catch (error: Exception) {
-                    error.rethrowIfCancellation()
-                    AppLog.w(TAG, "Order email to $receiver failed", error)
-                    errors += "$name: ${error.localizedMessage.orEmpty()}"
-                    recordOrder(
-                        name,
-                        senderEmail,
-                        receiver,
-                        subject,
-                        OrderStatus.FAILED,
-                        error.localizedMessage.orEmpty(),
-                        items,
-                        quantities
-                    )
-                }
-            }
-            val errorNote = if (errors.isEmpty()) {
-                ""
-            } else {
-                context.getString(R.string.order_errors_prefix, errors.joinToString("; "))
-            }
-            if (sent.isEmpty()) {
-                failSend(errorNote, statusText = "")
-            } else {
-                updateState {
-                    it.copy(
-                        loading = false,
-                        sendingOrders = false,
-                        orderSendError = null,
-                        orderSentStamp = it.orderSentStamp + 1,
-                        statusText = ""
-                    )
-                }
-            }
-        } catch (error: Exception) {
-            error.rethrowIfCancellation()
-            AppLog.w(TAG, "Order sending failed", error)
-            failSend(
-                context.getString(
-                    R.string.order_send_failed,
-                    error.localizedMessage.orEmpty()
-                )
-            )
-        }
-    }
-
-    private suspend fun recordOrder(
-        company: String,
-        senderEmail: String,
-        receiver: String,
-        subject: String,
-        status: String,
-        error: String?,
-        items: List<IndexedValue<ExcelRow>>,
-        quantities: Map<Int, Int>
-    ) {
-        try {
-            orderHistoryRepository.record(
-                OrderHistoryRecord(
-                    company = company,
-                    senderEmail = senderEmail,
-                    receiverEmail = receiver,
-                    subject = subject,
-                    status = status,
-                    error = error,
-                    items = items.map { (index, row) ->
-                        OrderHistoryItem(
-                            code = row.code,
-                            name = row.article,
-                            price = row.price,
-                            quantity = quantities[index] ?: 0
-                        )
-                    }
-                )
-            )
-        } catch (failure: Exception) {
-            failure.rethrowIfCancellation()
-            AppLog.w(TAG, "Could not record order history", failure)
-        }
-    }
-
-    private fun buildOrderTableHtml(
-        items: List<IndexedValue<ExcelRow>>,
-        quantities: Map<Int, Int>
-    ): String {
-        val rowsHtml = items.joinToString("\n") { (index, row) ->
-            val code = htmlEscape(row.code)
-            val name = htmlEscape(row.article)
-            val price = row.price?.let { String.format(Locale.US, "%.2f", it) }.orEmpty()
-            val quantity = (quantities[index] ?: 0).toString()
-            "            <tr><td>$code</td><td>$name</td><td>$price</td><td>$quantity</td></tr>"
-        }
-        return """
-            <html>
-            <body>
-                <table border="1" cellspacing="0" cellpadding="6">
-                    <tr><th>${context.getString(R.string.order_email_col_code)}</th><th>${
-            context.getString(
-                R.string.order_email_col_name
-            )
-        }</th><th>${context.getString(R.string.order_email_col_price)}</th><th>${context.getString(R.string.order_email_col_qty)}</th></tr>
-        $rowsHtml
-                </table>
-            </body>
-            </html>
-        """.trimIndent()
-    }
-
-    private fun failAuthorization(message: String) {
-        if (uiState.value.sendingOrders) {
-            failSend(message)
-        } else {
-            updateState { it.copy(loading = false, statusText = message) }
-        }
-    }
-
-    private fun failSend(message: String, statusText: String = message) {
-        updateState {
-            it.copy(
-                loading = false,
-                sendingOrders = false,
-                orderSendError = message,
-                statusText = statusText
-            )
-        }
-    }
-
     private fun supplierSummary(suppliers: Map<String, String>): String =
         suppliers.entries.joinToString(", ") { "${it.key} (${it.value})" }
-
-    private fun htmlEscape(value: String): String = value
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&#39;")
 
     private fun Exception.rethrowIfCancellation() {
         if (this is CancellationException) throw this
@@ -585,15 +360,6 @@ class OrderWorkflowViewModel @Inject constructor(
 
     private fun updateState(transform: (OrderWorkflowUiState) -> OrderWorkflowUiState) {
         _uiState.update(transform)
-    }
-
-    private sealed interface PendingAuthorization {
-        data class Overview(val senders: List<SenderEntity>) : PendingAuthorization
-        data class Parse(val items: List<OrderItem>) : PendingAuthorization
-        data class Send(
-            val items: List<IndexedValue<ExcelRow>>,
-            val quantities: Map<Int, Int>
-        ) : PendingAuthorization
     }
 
     private data class OrderItem(

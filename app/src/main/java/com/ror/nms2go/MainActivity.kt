@@ -16,16 +16,21 @@ import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
+import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.ui.OrderWorkflowViewModel
 import com.ror.nms2go.ui.Nms2GoApp
 import com.ror.nms2go.ui.theme.Nms2GoTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val authorizationClient by lazy { Identity.getAuthorizationClient(this) }
     private val workflowViewModel: OrderWorkflowViewModel by viewModels()
+
+    @Inject
+    lateinit var authManager: GmailAuthManager
 
     private val authorizationLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -44,7 +49,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         if (sendIntentException != null) {
-            workflowViewModel.onAuthorizationFailure(
+            authManager.onAuthorizationFailure(
                 getString(
                     R.string.auth_ui_launch_failed,
                     sendIntentException.localizedMessage.orEmpty()
@@ -54,12 +59,12 @@ class MainActivity : ComponentActivity() {
         }
 
         if (result.data == null) {
-            workflowViewModel.onAuthorizationFailure(getString(R.string.auth_no_data))
+            authManager.onAuthorizationFailure(getString(R.string.auth_no_data))
             return@registerForActivityResult
         }
 
         try {
-            workflowViewModel.onAuthorizationResult(
+            authManager.onAuthorizationResult(
                 authorizationClient.getAuthorizationResultFromIntent(result.data).accessToken
             )
         } catch (error: ApiException) {
@@ -70,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 7 -> getString(R.string.auth_network_error)
                 else -> getString(R.string.auth_failed)
             }
-            workflowViewModel.onAuthorizationFailure(
+            authManager.onAuthorizationFailure(
                 getString(
                     R.string.auth_failed_status,
                     baseMessage,
@@ -89,7 +94,7 @@ class MainActivity : ComponentActivity() {
             val workflow by workflowViewModel.uiState.collectAsState()
 
             LaunchedEffect(Unit) {
-                workflowViewModel.authorizationRequests.collect { requestAuthorization() }
+                authManager.authorizationRequests.collect { requestAuthorization() }
             }
 
             Nms2GoTheme {
@@ -101,13 +106,9 @@ class MainActivity : ComponentActivity() {
                     parsedExcel = workflow.parsedExcel,
                     onParseItem = workflowViewModel::startOrderForOverview,
                     onOrder = workflowViewModel::startOrderFromOverview,
-                    onSendOrders = workflowViewModel::sendOrders,
                     onDismissParsed = workflowViewModel::dismissParsed,
                     orderQuantities = workflow.orderQuantities,
                     onQuantityChange = workflowViewModel::onQuantityChange,
-                    orderSentStamp = workflow.orderSentStamp,
-                    sendingOrders = workflow.sendingOrders,
-                    orderSendError = workflow.orderSendError,
                     orderLoadingProgress = workflow.orderLoadingProgress
                 )
             }
@@ -128,12 +129,12 @@ class MainActivity : ComponentActivity() {
                 if (result.hasResolution()) {
                     launchResolution(result)
                 } else {
-                    workflowViewModel.onAuthorizationResult(result.accessToken)
+                    authManager.onAuthorizationResult(result.accessToken)
                 }
             }
             .addOnFailureListener { error ->
                 AppLog.w(TAG, "Authorization request failed", error)
-                workflowViewModel.onAuthorizationFailure(
+                authManager.onAuthorizationFailure(
                     getString(R.string.auth_request_failed, error.localizedMessage.orEmpty())
                 )
             }
@@ -142,7 +143,7 @@ class MainActivity : ComponentActivity() {
     private fun launchResolution(result: com.google.android.gms.auth.api.identity.AuthorizationResult) {
         val pendingIntent = result.pendingIntent
         if (pendingIntent == null) {
-            workflowViewModel.onAuthorizationFailure(getString(R.string.auth_no_resolution))
+            authManager.onAuthorizationFailure(getString(R.string.auth_no_resolution))
             return
         }
         try {
@@ -150,7 +151,7 @@ class MainActivity : ComponentActivity() {
                 IntentSenderRequest.Builder(pendingIntent.intentSender).build()
             )
         } catch (error: IntentSender.SendIntentException) {
-            workflowViewModel.onAuthorizationFailure(
+            authManager.onAuthorizationFailure(
                 getString(R.string.auth_ui_launch_failed, error.localizedMessage.orEmpty())
             )
         }
