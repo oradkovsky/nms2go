@@ -1,13 +1,11 @@
 package com.ror.nms2go
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -17,11 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
 import com.ror.nms2go.data.AppDatabase
-import com.ror.nms2go.data.OrderDao
-import com.ror.nms2go.data.OrderItemEntity
-import com.ror.nms2go.data.OrderStatus
-import com.ror.nms2go.data.SentOrderEntity
-import com.ror.nms2go.data.SentOrderWithItems
+import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.ui.Nms2GoApp
 import com.ror.nms2go.ui.ORDER_BUTTON_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -29,6 +23,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,48 +38,26 @@ class OrderSendFlowTest {
     val rule = createAndroidComposeRule<HiltTestActivity>()
 
     @Inject
-    lateinit var orderDao: OrderDao
+    lateinit var appDatabase: AppDatabase
 
     @Inject
-    lateinit var appDatabase: AppDatabase
+    lateinit var fakeGmail: FakeGmailSender
+
+    @Inject
+    lateinit var authManager: GmailAuthManager
 
     @Before
     fun init() {
         hiltRule.inject()
         FakeSenders.reset()
+        fakeGmail.reset()
         runBlocking { appDatabase.clearAllTables() }
     }
 
     private val appContext: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    private fun createTestOrder(id: Long = 1, company: String = "Test Supplier"): SentOrderWithItems =
-        SentOrderWithItems(
-            order = SentOrderEntity(
-                id = id,
-                sentAt = 1_700_000_000_000L,
-                company = company,
-                senderEmail = "sender@example.com",
-                receiverEmail = "receiver@example.com",
-                subject = "Order $company 2024-11-14 10:00",
-                status = OrderStatus.SENT,
-                error = null
-            ),
-            items = listOf(
-                OrderItemEntity(id = 10, orderId = id, code = "C1", name = "Парацетамол", price = 12.5, quantity = 1)
-            )
-        )
-
-    private class SendFlowHarness(
-        val stamp: MutableState<Int>,
-        val sending: MutableState<Boolean>,
-        val error: MutableState<String?>
-    )
-
-    private fun sendFlowContent(onSendOrders: () -> Unit): SendFlowHarness {
-        val stamp = mutableIntStateOf(0)
-        val sending = mutableStateOf(false)
-        val error = mutableStateOf<String?>(null)
+    private fun sendFlowContent() {
         val parsed = mutableStateOf<ParsedExcel?>(null)
         rule.setContent {
             Nms2GoApp(
@@ -94,14 +67,10 @@ class OrderSendFlowTest {
                 onLoad = {},
                 onParseItem = { _ -> },
                 onOrder = {},
-                onSendOrders = onSendOrders,
                 parsedExcel = parsed.value,
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
-                onQuantityChange = { _, _ -> },
-                orderSentStamp = stamp.value,
-                sendingOrders = sending.value,
-                orderSendError = error.value
+                onQuantityChange = { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()
@@ -124,13 +93,11 @@ class OrderSendFlowTest {
         )
         rule.waitForIdle()
         TestVisuals.afterSetContent()
-        return SendFlowHarness(stamp, sending, error)
     }
 
     @Test
     fun orderSend_success_showsSendingThenLandsOnOrders() {
-        var sendCalls = 0
-        val harness = sendFlowContent { sendCalls++ }
+        sendFlowContent()
 
         rule.onNodeWithText(appContext.getString(R.string.parsed_title)).assertIsDisplayed()
 
@@ -143,28 +110,31 @@ class OrderSendFlowTest {
         TestVisuals.afterAction()
         rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_confirm)).performClick()
         TestVisuals.afterAction()
-        assertEquals(1, sendCalls)
 
-        harness.sending.value = true
+        // The Review screen owns its sending state: confirming switches the
+        // order button to "Sending…" until auth is approved and delivery completes.
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
+        assertEquals(0, fakeGmail.sentMessages.size)
 
-        harness.sending.value = false
-        harness.error.value = null
-        harness.stamp.value = harness.stamp.value + 1
+        authManager.onAuthorizationResult("fake-token")
         rule.waitForIdle()
         TestVisuals.afterAction()
+
+        assertEquals(1, fakeGmail.sentMessages.size)
+        assertEquals("receiver@example.com", fakeGmail.sentMessages.single().to)
+        assertTrue(fakeGmail.sentMessages.single().subject.contains("Test Supplier"))
 
         rule.onAllNodesWithTag(ORDER_BUTTON_TAG).assertCountEquals(0)
         // Drawer + TopBar both show orders_title after rename, so 2 nodes in tree (one hidden in drawer)
         rule.onAllNodesWithText(appContext.getString(R.string.orders_title)).assertCountEquals(2)
-        rule.onNodeWithText(appContext.getString(R.string.orders_empty)).assertIsDisplayed()
+        rule.onNodeWithText("Test Supplier").assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.orders_count, 1)).assertIsDisplayed()
     }
 
     @Test
-    fun orderSend_failure_showsErrorAndAllowsRetry() {
-        var sendCalls = 0
-        val harness = sendFlowContent { sendCalls++ }
+    fun orderSend_failure_showsError() {
+        sendFlowContent()
 
         rule.onNodeWithContentDescription(appContext.getString(R.string.review_title)).performClick()
         TestVisuals.afterAction()
@@ -174,43 +144,49 @@ class OrderSendFlowTest {
         TestVisuals.afterAction()
         rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_confirm)).performClick()
         TestVisuals.afterAction()
-        assertEquals(1, sendCalls)
 
-        harness.sending.value = true
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
 
         val failure = "Could not send orders: simulated failure"
-        harness.sending.value = false
-        harness.error.value = failure
+        fakeGmail.failWith = failure
+        authManager.onAuthorizationResult("fake-token")
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        // Current production shows Error state (hides orderButton); retry requires clearing error
-        rule.onNodeWithText(failure).assertIsDisplayed()
+        // The Review screen owns the error: the order button is gone and the
+        // back button offers the only way out.
+        rule.onNodeWithText(failure, substring = true).assertIsDisplayed()
         rule.onAllNodesWithTag(ORDER_BUTTON_TAG).assertCountEquals(0)
         rule.onNodeWithText(appContext.getString(R.string.back)).assertIsDisplayed()
-        // Simulate error cleared (as if user dismissed) - Content should return with retry
-        harness.error.value = null
-        rule.waitForIdle()
+    }
+
+    @Test
+    fun orderSend_authFailure_showsError() {
+        sendFlowContent()
+
+        rule.onNodeWithContentDescription(appContext.getString(R.string.review_title)).performClick()
         TestVisuals.afterAction()
-        rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsEnabled()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).performClick()
         TestVisuals.afterAction()
         rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_confirm)).performClick()
         TestVisuals.afterAction()
-        assertEquals(2, sendCalls)
 
-        harness.sending.value = true
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
+
+        authManager.onAuthorizationFailure("auth boom")
+        rule.waitForIdle()
+        TestVisuals.afterAction()
+
+        rule.onNodeWithText("auth boom").assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.back)).assertIsDisplayed()
     }
 
     @Test
     fun overview_autoReloadsWhenReturnedToAfterSend() {
         var loadCalls = 0
-        val stamp = mutableIntStateOf(0)
         val parsed = mutableStateOf<ParsedExcel?>(null)
-        val ordersState = mutableStateOf<List<SentOrderWithItems>>(emptyList())
         val overviewResultsState = mutableStateOf<List<com.ror.nms2go.data.SenderOverview>>(emptyList())
         val sender = com.ror.nms2go.data.SenderEntity(
             companyName = "Test Co",
@@ -257,22 +233,10 @@ class OrderSendFlowTest {
                 },
                 onParseItem = { _ -> },
                 onOrder = {},
-                onSendOrders = {
-                    stamp.value = stamp.value + 1
-                    val order = createTestOrder(company = "Test Supplier")
-                    runBlocking {
-                        val orderId = orderDao.insertOrder(order.order.copy(id = 0))
-                        orderDao.insertOrderItems(order.items.map { it.copy(id = 0, orderId = orderId) })
-                    }
-                    ordersState.value = listOf(order)
-                },
                 parsedExcel = parsed.value,
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
-                onQuantityChange = { _, _ -> },
-                orderSentStamp = stamp.value,
-                sendingOrders = false,
-                orderSendError = null
+                onQuantityChange = { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()
@@ -289,6 +253,9 @@ class OrderSendFlowTest {
         rule.onNodeWithTag(ORDER_BUTTON_TAG).performClick()
         TestVisuals.afterAction()
         rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_confirm)).performClick()
+        TestVisuals.afterAction()
+        authManager.onAuthorizationResult("fake-token")
+        rule.waitForIdle()
         TestVisuals.afterAction()
         rule.onAllNodesWithText(appContext.getString(R.string.orders_title)).assertCountEquals(2)
         // Verify order is correctly reflected on the list after bulk send

@@ -4,7 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -47,14 +47,10 @@ class OverviewNavigationTest {
                 onLoad = {},
                 onParseItem = { _ -> },
                 onOrder = {},
-                onSendOrders = {},
                 parsedExcel = null,
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
-                onQuantityChange = { _, _ -> },
-                orderSentStamp = 0,
-                sendingOrders = false,
-                orderSendError = null
+                onQuantityChange = { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

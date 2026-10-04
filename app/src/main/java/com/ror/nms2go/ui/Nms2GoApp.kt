@@ -28,14 +28,10 @@ fun Nms2GoApp(
     onLoad: () -> Unit,
     onParseItem: (SenderOverview) -> Unit,
     onOrder: () -> Unit,
-    onSendOrders: () -> Unit,
     parsedExcel: ParsedExcel?,
     onDismissParsed: () -> Unit,
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
-    orderSentStamp: Int,
-    sendingOrders: Boolean,
-    orderSendError: String?,
     orderLoadingProgress: Pair<Int, Int>? = null
 ) {
     val navController = rememberNavController()
@@ -59,16 +55,14 @@ fun Nms2GoApp(
         navController.popBackStack(Destinations.OVERVIEW, inclusive = false)
     }
 
-    LaunchedEffect(orderSentStamp) {
-        if (orderSentStamp > 0 && currentRoute == Destinations.REVIEW) {
-            onDismissParsed()
-            navController.navigate(Destinations.ORDERS) {
-                popUpTo(navController.graph.findStartDestination().id) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
+    val onOrderSent: () -> Unit = {
+        onDismissParsed()
+        navController.navigate(Destinations.ORDERS) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
             }
+            launchSingleTop = true
+            restoreState = true
         }
     }
 
@@ -138,9 +132,7 @@ fun Nms2GoApp(
                 orderQuantities = orderQuantities,
                 onQuantityChange = onQuantityChange,
                 orderLoadingProgress = orderLoadingProgress,
-                sendingOrders = sendingOrders,
-                orderSendError = orderSendError,
-                onSendOrders = onSendOrders,
+                onOrderSent = onOrderSent,
                 onBackToOverview = backToOverview,
                 modifier = Modifier.padding(innerPadding)
             )

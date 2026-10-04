@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -107,14 +107,10 @@ class SentOrdersScreenTest {
                 onLoad = {},
                 onParseItem = { _ -> },
                 onOrder = {},
-                onSendOrders = {},
                 parsedExcel = null,
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
-                onQuantityChange = { _, _ -> },
-                orderSentStamp = 0,
-                sendingOrders = false,
-                orderSendError = null
+                onQuantityChange = { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

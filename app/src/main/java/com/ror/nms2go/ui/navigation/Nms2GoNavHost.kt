@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -43,9 +44,7 @@ fun Nms2GoNavHost(
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
     orderLoadingProgress: Pair<Int, Int>?,
-    sendingOrders: Boolean,
-    orderSendError: String?,
-    onSendOrders: () -> Unit,
+    onOrderSent: () -> Unit,
     onBackToOverview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -140,8 +139,7 @@ fun Nms2GoNavHost(
             )
         }
         composable(Destinations.PARSED) {
-            val parsedViewModel: ParsedViewModel =
-                androidx.lifecycle.viewmodel.compose.viewModel()
+            val parsedViewModel: ParsedViewModel = viewModel()
             val parsedUiState by parsedViewModel.uiState.collectAsState()
             LaunchedEffect(parsedExcel, orderQuantities, loading, orderLoadingProgress) {
                 parsedViewModel.updateData(
@@ -166,25 +164,21 @@ fun Nms2GoNavHost(
             )
         }
         composable(Destinations.REVIEW) {
-            val reviewViewModel: ReviewViewModel =
-                androidx.lifecycle.viewmodel.compose.viewModel()
-            val reviewUiState by reviewViewModel.uiState.collectAsState()
-            LaunchedEffect(parsedExcel, orderQuantities, sendingOrders, orderSendError) {
-                reviewViewModel.updateData(
-                    parsedExcel,
-                    orderQuantities,
-                    sendingOrders,
-                    orderSendError
+            val reviewViewModel =
+                hiltViewModel<ReviewViewModel, ReviewViewModel.Factory>(
+                    creationCallback = { factory ->
+                        factory.create(parsedExcel, orderQuantities)
+                    }
                 )
-            }
+            val reviewUiState by reviewViewModel.uiState.collectAsState()
             LaunchedEffect(reviewViewModel) {
                 reviewViewModel.quantityChangeEvent.collect { (index, qty) ->
                     onQuantityChange(index, qty)
                 }
             }
             LaunchedEffect(reviewViewModel) {
-                reviewViewModel.orderRequested.collect {
-                    onSendOrders()
+                reviewViewModel.orderSent.collect {
+                    onOrderSent()
                 }
             }
             ReviewScreen(

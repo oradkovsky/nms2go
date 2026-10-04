@@ -12,11 +12,19 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
+import com.ror.nms2go.data.GmailAuthManager
+import com.ror.nms2go.data.GmailSender
+import com.ror.nms2go.data.OrderHistoryRepository
+import com.ror.nms2go.data.SenderRepository
 import com.ror.nms2go.ui.ORDER_BUTTON_TAG
+import com.ror.nms2go.ui.REVIEW_LOADING_TAG
 import com.ror.nms2go.ui.ReviewScreen
 import com.ror.nms2go.ui.ReviewViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +46,50 @@ class ReviewSendingStatesTest {
     @Before
     fun init() {
         hiltRule.inject()
+        FakeSenders.reset()
+        sentMessages.clear()
+        gmailFailure = null
     }
+
+    @Inject
+    lateinit var senderRepository: SenderRepository
+
+    @Inject
+    lateinit var orderHistoryRepository: OrderHistoryRepository
+
+    @Inject
+    lateinit var authManager: GmailAuthManager
+
+    // Delivery recording for the two tests that complete a real send below.
+    // Other tests never get past auth (nothing approves it), so the sender
+    // stays untouched there.
+    private val sentMessages = mutableListOf<String>()
+    private var gmailFailure: String? = null
+    private val fakeGmailSender = object : GmailSender {
+        override fun sendMessage(
+            to: String,
+            subject: String,
+            htmlBody: String,
+            accessToken: String
+        ) {
+            gmailFailure?.let { throw java.io.IOException(it) }
+            sentMessages += to
+        }
+    }
+
+    private fun reviewViewModel(
+        parsed: ParsedExcel?,
+        quantities: Map<Int, Int>
+    ) = ReviewViewModel(
+        parsed = parsed,
+        quantities = quantities,
+        gmailSender = fakeGmailSender,
+        senderRepository = senderRepository,
+        orderHistoryRepository = orderHistoryRepository,
+        authManager = authManager,
+        context = appContext,
+        ioDispatcher = Dispatchers.Unconfined
+    )
 
     private val appContext: Context
         get() = ApplicationProvider.getApplicationContext()
@@ -75,15 +126,25 @@ class ReviewSendingStatesTest {
         rule.waitForIdle()
     }
 
-    @Test
-    fun sendingTrue_disablesButtonAndShowsSending() {
-        val viewModel = ReviewViewModel()
+    /**
+     * Creates a ViewModel already sending, the way production does:
+     * content → order requested (dialog) → confirmed. Auth is never approved
+     * here (nothing collects the requests), so sending persists.
+     */
+    private fun setUpSending(): ReviewViewModel {
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
+        viewModel.onOrderRequested()
+        viewModel.onConfirmOrder()
         rule.waitForIdle()
         TestVisuals.afterAction()
+        return viewModel
+    }
+
+    @Test
+    fun confirm_startsSendingAndDisablesButton() {
+        val viewModel = setUpSending()
 
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
@@ -91,11 +152,9 @@ class ReviewSendingStatesTest {
 
     @Test
     fun sendingFalse_enablesButtonWithOrderText() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -104,57 +163,47 @@ class ReviewSendingStatesTest {
     }
 
     @Test
-    fun sendingTrueWithError_errorWinsAndHidesSendingIndicator() {
-        val viewModel = ReviewViewModel()
-        setUp(viewModel)
-        TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = "boom")
+    fun sendFailure_showsErrorAndHidesSendingIndicator() {
+        val viewModel = setUpSending()
+        gmailFailure = "boom"
+        authManager.onAuthorizationResult("fake-token")
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText("boom").assertIsDisplayed()
+        rule.onNodeWithText("boom", substring = true).assertIsDisplayed()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertDoesNotExist()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertDoesNotExist()
     }
 
     @Test
-    fun sendingTrueWithNullParsed_showsEmpty() {
-        val viewModel = ReviewViewModel()
+    fun sendingTrueWithNullParsed_showsLoading() {
+        val viewModel = reviewViewModel(null, mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(null, mapOf(0 to 2), isSending = true, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText(appContext.getString(R.string.review_empty)).assertIsDisplayed()
+        rule.onNodeWithTag(REVIEW_LOADING_TAG).assertIsDisplayed()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.back)).assertIsDisplayed()
     }
 
     @Test
-    fun sendingTrueWithEmptyChosen_showsEmpty() {
-        val viewModel = ReviewViewModel()
+    fun sendingTrueWithEmptyChosen_showsError() {
+        val viewModel = reviewViewModel(parsed(), emptyMap())
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), emptyMap(), isSending = true, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
         rule.onNodeWithText(appContext.getString(R.string.review_empty)).assertIsDisplayed()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.back)).assertIsDisplayed()
     }
 
     @Test
     fun quantitiesLocked_whileSending() {
-        val viewModel = ReviewViewModel()
-        setUp(viewModel)
-        TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
-        rule.waitForIdle()
-        TestVisuals.afterAction()
+        val viewModel = setUpSending()
 
         // Stepper controls are disabled while sending.
         rule.onNodeWithContentDescription(appContext.getString(R.string.parsed_qty_add))
@@ -174,11 +223,9 @@ class ReviewSendingStatesTest {
 
     @Test
     fun quantitiesEditable_whenNotSending() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -196,31 +243,24 @@ class ReviewSendingStatesTest {
 
     @Test
     fun quantityTapBlocked_whileSending() {
-        val viewModel = ReviewViewModel()
-        setUp(viewModel)
-        TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
-        rule.waitForIdle()
-        TestVisuals.afterAction()
+        val viewModel = setUpSending()
 
         // Central tap that opens the manual-entry dialog must do nothing while sending.
         rule.onNodeWithText("2").performClick()
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title))
+            .assertDoesNotExist()
         rule.onNodeWithText("2").assertIsDisplayed()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
     }
 
     @Test
     fun quantityTapOpensDialog_whenNotSending() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -228,18 +268,13 @@ class ReviewSendingStatesTest {
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title)).assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title))
+            .assertIsDisplayed()
     }
 
     @Test
     fun dialogBlocked_whileSending() {
-        val viewModel = ReviewViewModel()
-        setUp(viewModel)
-        TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
-        rule.waitForIdle()
-        TestVisuals.afterAction()
+        val viewModel = setUpSending()
 
         // The order button is disabled with a "Sending…" label while sending,
         // so the confirm dialog must not be invocable.
@@ -247,43 +282,42 @@ class ReviewSendingStatesTest {
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title))
+            .assertDoesNotExist()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
     }
 
     @Test
     fun dialogDismissed_whenSendingStarts() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
         viewModel.onOrderRequested()
         rule.waitForIdle()
         TestVisuals.afterAction()
-        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title)).assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title))
+            .assertIsDisplayed()
 
         // A stale dialog must not stay visible on top of the disabled "Sending…" button.
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
+        viewModel.onConfirmOrder()
         rule.waitForIdle()
         TestVisuals.afterAction()
 
-        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title))
+            .assertDoesNotExist()
         rule.onNodeWithText(appContext.getString(R.string.review_sending)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
     }
 
     @Test
     fun zeroQuantity_keepsRowVisible_noBlankScreen() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -300,11 +334,9 @@ class ReviewSendingStatesTest {
 
     @Test
     fun allZero_disablesSending_noDialog() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
         viewModel.onQuantityChange(0, 0)
@@ -318,16 +350,15 @@ class ReviewSendingStatesTest {
         viewModel.onOrderRequested()
         rule.waitForIdle()
         TestVisuals.afterAction()
-        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title)).assertDoesNotExist()
+        rule.onNodeWithText(appContext.getString(R.string.review_order_dialog_title))
+            .assertDoesNotExist()
     }
 
     @Test
     fun zeroQuantity_minusDisabled_plusAndTapEnabled() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 0))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 0), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -339,16 +370,15 @@ class ReviewSendingStatesTest {
         rule.onNodeWithText("0").performClick()
         rule.waitForIdle()
         TestVisuals.afterAction()
-        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title)).assertIsDisplayed()
+        rule.onNodeWithText(appContext.getString(R.string.quantity_dialog_title))
+            .assertIsDisplayed()
     }
 
     @Test
     fun zeroThenPlus_reenablesSending() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 0))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 0), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
@@ -363,11 +393,9 @@ class ReviewSendingStatesTest {
 
     @Test
     fun mixedZeroAndPositive_sendingEnabled_zeroRowStays() {
-        val viewModel = ReviewViewModel()
+        val viewModel = reviewViewModel(parsed(), mapOf(0 to 0, 1 to 2))
         setUp(viewModel)
         TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 0, 1 to 2), isSending = false, error = null)
         rule.waitForIdle()
         TestVisuals.afterAction()
 
@@ -379,21 +407,16 @@ class ReviewSendingStatesTest {
     }
 
     @Test
-    fun sendingCleared_reenablesButton() {
-        val viewModel = ReviewViewModel()
-        setUp(viewModel)
-        TestVisuals.afterSetContent()
-
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = true, error = null)
-        rule.waitForIdle()
-        TestVisuals.afterAction()
+    fun sendSuccess_clearsSendingAndReenablesButton() {
+        val viewModel = setUpSending()
 
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsNotEnabled()
 
-        viewModel.updateData(parsed(), mapOf(0 to 2), isSending = false, error = null)
+        authManager.onAuthorizationResult("fake-token")
         rule.waitForIdle()
         TestVisuals.afterAction()
 
+        assertEquals(listOf("receiver@example.com"), sentMessages)
         rule.onNodeWithText(appContext.getString(R.string.review_order_button)).assertIsDisplayed()
         rule.onNodeWithTag(ORDER_BUTTON_TAG).assertIsEnabled()
     }

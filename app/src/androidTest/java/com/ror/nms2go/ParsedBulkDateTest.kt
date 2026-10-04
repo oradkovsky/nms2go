@@ -267,14 +267,10 @@ class ParsedBulkDateTest {
                 onLoad = {},
                 onParseItem = { _ -> },
                 onOrder = {},
-                onSendOrders = {},
                 parsedExcel = parsed,
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
-                orderSentStamp = 0,
-                sendingOrders = false,
-                orderSendError = null,
                 orderLoadingProgress = 1 to 2
             )
         }
