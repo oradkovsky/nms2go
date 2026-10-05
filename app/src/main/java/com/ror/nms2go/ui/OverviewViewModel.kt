@@ -108,7 +108,9 @@ class OverviewViewModel @Inject constructor(
             items = currentResults.map { overview ->
                 OverviewUiItem(
                     senderQuery = overview.senderQuery,
-                    companyName = currentSenders.firstOrNull { it.inboundEmail == overview.senderQuery }?.companyName,
+                    companyName = currentSenders
+                        .firstOrNull { it.inboundEmail == overview.senderQuery }
+                        ?.companyName,
                     subject = overview.subject?.let { displaySubject(it, overview.date) },
                     date = overview.date,
                     status = overview.status.toUiItemStatus()
@@ -138,17 +140,21 @@ class OverviewViewModel @Inject constructor(
         SenderOverview.Status.NO_MESSAGES -> OverviewUiItemStatus.NO_MESSAGES
         SenderOverview.Status.NO_ATTACHMENTS -> OverviewUiItemStatus.NO_ATTACHMENTS
     }
-}
 
-/** Removes the date suffix when it duplicates the separately rendered date. */
-private fun displaySubject(subject: String, date: String?): String {
-    if (date.isNullOrBlank()) return subject
-    val exactSuffix = " ($date)"
-    if (subject.endsWith(exactSuffix)) return subject.removeSuffix(exactSuffix)
+    /** Removes the date suffix when it duplicates the separately rendered date. */
+    private fun displaySubject(subject: String, date: String?): String {
+        if (date.isNullOrBlank()) return subject
+        val exactSuffix = " ($date)"
+        if (subject.endsWith(exactSuffix)) return subject.removeSuffix(exactSuffix)
 
-    val dateOnly = date.substringBefore(" ")
-    if (dateOnly != date && subject.endsWith(" ($dateOnly)")) {
-        return subject.removeSuffix(" ($dateOnly)")
+        val dateOnly = date.substringBefore(" ")
+        if (dateOnly != date && subject.endsWith(" ($dateOnly)")) {
+            return subject.removeSuffix(" ($dateOnly)")
+        }
+        return subject.replace(DATE_SUFFIX_REGEX, "")
     }
-    return subject.replace(Regex("""\s*\(\s*\d{2}[.\-]\d{2}[.\-]\d{4}[^)]*\)\s*$"""), "")
+
+    private companion object {
+        val DATE_SUFFIX_REGEX = Regex("""\s*\(\s*\d{2}[.\-]\d{2}[.\-]\d{4}[^)]*\)\s*$""")
+    }
 }
