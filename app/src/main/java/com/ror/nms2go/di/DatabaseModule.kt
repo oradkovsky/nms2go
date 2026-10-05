@@ -17,11 +17,8 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        // Keep using AppDatabase.getInstance() semantics if already initialized,
-        // but Hilt now owns the singleton. Reuse Room builder with migrations.
-        return AppDatabase.getInstance(context)
-    }
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
+        AppDatabase.create(context)
 
     @Provides
     fun provideSenderDao(database: AppDatabase): SenderDao = database.senderDao()

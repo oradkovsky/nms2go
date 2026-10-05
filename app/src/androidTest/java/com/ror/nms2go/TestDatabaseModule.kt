@@ -26,7 +26,7 @@ object TestDatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
-        AppDatabase.getInstance(context)
+        AppDatabase.create(context)
 
     @Provides
     @Singleton
