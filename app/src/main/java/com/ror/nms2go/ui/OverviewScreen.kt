@@ -50,44 +50,20 @@ fun OverviewScreen(
             Spacer(Modifier.height(20.dp))
         }
 
-        if (uiModel.isLoading) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (uiModel.showEmptyState) {
-            val prefix = stringResource(R.string.overview_empty_prefix)
-            val configuration = stringResource(R.string.menu_configuration)
-            val linkColor = MaterialTheme.colorScheme.primary
-            val annotatedString = buildAnnotatedString {
-                append(prefix)
-                append(" ")
-                withLink(
-                    LinkAnnotation.Clickable(
-                        tag = "menu_configuration",
-                        styles = TextLinkStyles(
-                            style = SpanStyle(
-                                color = linkColor,
-                                textDecoration = TextDecoration.Underline,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        ),
-                        linkInteractionListener = { onNavigateToConfig() }
-                    )
-                ) {
-                    append(configuration)
+        when {
+            uiModel.isLoading -> {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
-            Text(
-                text = annotatedString,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                modifier = Modifier
-                    .padding(end = 2.dp)
-                    .debugTestTag("emptyStateLink")
-            )
-        } else {
-            OverviewList(items = uiModel.items, onParseItem = onParseItem)
+
+            uiModel.showEmptyState -> {
+                OverviewEmptyState(onNavigateToConfig = onNavigateToConfig)
+            }
+
+            else -> {
+                OverviewList(items = uiModel.items, onParseItem = onParseItem)
+            }
         }
 
         if (uiModel.showStatus) {
@@ -103,19 +79,50 @@ fun OverviewScreen(
 }
 
 @Composable
+private fun OverviewEmptyState(onNavigateToConfig: () -> Unit) {
+    val prefix = stringResource(R.string.overview_empty_prefix)
+    val configuration = stringResource(R.string.menu_configuration)
+    val linkColor = MaterialTheme.colorScheme.primary
+    val annotatedString = buildAnnotatedString {
+        append(prefix)
+        append(" ")
+        withLink(
+            LinkAnnotation.Clickable(
+                tag = "menu_configuration",
+                styles = TextLinkStyles(
+                    style = SpanStyle(
+                        color = linkColor,
+                        textDecoration = TextDecoration.Underline,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                ),
+                linkInteractionListener = { onNavigateToConfig() }
+            )
+        ) {
+            append(configuration)
+        }
+    }
+    Text(
+        text = annotatedString,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        modifier = Modifier
+            .padding(end = 2.dp)
+            .debugTestTag("emptyStateLink")
+    )
+}
+
+@Composable
 private fun OverviewList(
     items: List<OverviewUiItem>,
     onParseItem: (String) -> Unit
 ) {
-    if (items.isEmpty()) {
-        // Don't show "Завантаження останніх листів…" when not loading – statusText at the bottom
-        // already communicates idle / auth error. This prevents stuck loading hint after user
-        // dismisses the Google account chooser (auth cancelled) while keeping the error label visible.
-        return
-    }
-
     LazyColumn {
-        items(items, key = { it.senderQuery }) { item ->
+        items(
+            items = items,
+            key = { it.senderQuery }
+        ) { item ->
             OverviewRow(item = item, onParseItem = onParseItem)
         }
     }
@@ -126,23 +133,21 @@ private fun OverviewRow(
     item: OverviewUiItem,
     onParseItem: (String) -> Unit
 ) {
-    val onClick: (() -> Unit)? = if (item.isParseable) {
-        { onParseItem(item.senderQuery) }
-    } else {
-        null
-    }
     val cardModifier = Modifier
         .fillMaxWidth()
         .padding(bottom = 12.dp)
-    if (onClick != null) {
+
+    if (item.isParseable) {
         OutlinedCard(
-            onClick = onClick,
+            onClick = { onParseItem(item.senderQuery) },
             modifier = cardModifier
         ) {
             OverviewRowContent(item)
         }
     } else {
-        OutlinedCard(modifier = cardModifier) {
+        OutlinedCard(
+            modifier = cardModifier
+        ) {
             OverviewRowContent(item)
         }
     }
@@ -151,28 +156,32 @@ private fun OverviewRow(
 @Composable
 private fun OverviewRowContent(item: OverviewUiItem) {
     Column(modifier = Modifier.padding(16.dp)) {
-        if (item.companyName != null) {
-            Text(
-                text = item.companyName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = item.senderQuery,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        } else {
-            Text(
-                text = item.senderQuery,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        when (val companyName = item.companyName) {
+            null -> {
+                Text(
+                    text = item.senderQuery,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            else -> {
+                Text(
+                    text = companyName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = item.senderQuery,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
         Spacer(Modifier.height(4.dp))
         when (item.status) {
