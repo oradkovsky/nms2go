@@ -141,20 +141,15 @@ class GmailApiClient(
     private val outputDirectory: File,
     private val transport: GmailTransport = HttpGmailTransport()
 ) {
-    fun loadOverview(
-        senders: List<String>,
-        accessToken: String
-    ): List<SenderOverview> = loadOverviewForLookups(
-        lookups = senders.map { SenderLookup(it) },
-        accessToken = accessToken
-    )
 
     fun loadOverviewForLookups(
         lookups: List<SenderLookup>,
         accessToken: String
     ): List<SenderOverview> {
         if (lookups.isEmpty()) return emptyList()
-        val executor = Executors.newFixedThreadPool(minOf(lookups.size, MAX_PARALLEL_GMAIL_REQUESTS))
+        val executor = Executors.newFixedThreadPool(
+            minOf(lookups.size, MAX_PARALLEL_GMAIL_REQUESTS)
+        )
         try {
             val tasks = lookups.map { lookup ->
                 executor.submit<SenderOverview> { loadOverviewForSender(lookup, accessToken) }
@@ -249,7 +244,10 @@ class GmailApiClient(
     fun sendMessage(to: String, subject: String, htmlBody: String, accessToken: String) {
         val raw = buildRawMessage(to, subject, htmlBody)
         val payload = JSONObject()
-            .put("raw", GmailAttachmentUtils.encodeBase64Url(raw.toByteArray(StandardCharsets.UTF_8)))
+            .put(
+                "raw",
+                GmailAttachmentUtils.encodeBase64Url(raw.toByteArray(StandardCharsets.UTF_8))
+            )
         transport.postJson("/gmail/v1/users/me/messages/send", payload, accessToken)
     }
 
@@ -279,8 +277,8 @@ class GmailApiClient(
     private fun encodeRfc2047(value: String): String {
         if (value.all { it.code < 0x80 }) return value
         return "=?UTF-8?B?" +
-            Base64.getEncoder().encodeToString(value.toByteArray(StandardCharsets.UTF_8)) +
-            "?="
+                Base64.getEncoder().encodeToString(value.toByteArray(StandardCharsets.UTF_8)) +
+                "?="
     }
 
     private fun flattenAttachments(part: JSONObject): Sequence<GmailAttachmentPart> = sequence {
@@ -333,7 +331,9 @@ class GmailApiClient(
         )
         val messages = response.optJSONArray("messages") ?: JSONArray()
         return (0 until messages.length())
-            .mapNotNull { messages.optJSONObject(it)?.optString("id")?.takeIf { id -> id.isNotBlank() } }
+            .mapNotNull {
+                messages.optJSONObject(it)?.optString("id")?.takeIf { id -> id.isNotBlank() }
+            }
     }
 
     /**
