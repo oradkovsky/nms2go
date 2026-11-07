@@ -22,9 +22,7 @@ import kotlinx.coroutines.launch
 fun Nms2GoDrawerContent(
     drawerState: DrawerState,
     currentRoute: String?,
-    onOverviewClick: () -> Unit,
-    onOrdersClick: () -> Unit,
-    onConfigClick: () -> Unit
+    onDestinationSelected: (DrawerDestination) -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -43,7 +41,7 @@ fun Nms2GoDrawerContent(
             selected = currentRoute == Destinations.OVERVIEW,
             onClick = {
                 closeDrawer()
-                onOverviewClick()
+                onDestinationSelected(DrawerDestination.Overview)
             },
             icon = { Icon(Icons.Filled.Home, contentDescription = null) }
         )
@@ -52,7 +50,7 @@ fun Nms2GoDrawerContent(
             selected = currentRoute == Destinations.ORDERS,
             onClick = {
                 closeDrawer()
-                onOrdersClick()
+                onDestinationSelected(DrawerDestination.Orders)
             },
             icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = null) }
         )
@@ -61,7 +59,7 @@ fun Nms2GoDrawerContent(
             selected = currentRoute == Destinations.CONFIG,
             onClick = {
                 closeDrawer()
-                onConfigClick()
+                onDestinationSelected(DrawerDestination.Configuration)
             },
             icon = { Icon(Icons.Filled.Settings, contentDescription = null) }
         )
