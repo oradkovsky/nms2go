@@ -7,6 +7,8 @@ import com.ror.nms2go.ExcelParser
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
+import com.ror.nms2go.analytics.Analytics
+import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.GmailAuthManager
@@ -58,6 +60,7 @@ class OrderWorkflowViewModel @Inject constructor(
     private val senderRepository: SenderRepository,
     private val gmailRepository: GmailRepository,
     private val authManager: GmailAuthManager,
+    private val analytics: Analytics,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -142,6 +145,10 @@ class OrderWorkflowViewModel @Inject constructor(
                     val sender = senderByEmail[overview.senderQuery]
                     OrderItem(overview, sender?.parser.orEmpty(), sender)
                 }
+            analytics.logEvent(
+                AnalyticsEvents.OverviewOrderAll.EVENT_NAME,
+                AnalyticsEvents.OverviewOrderAll.Attributes.ITEMS_COUNT to items.size
+            )
             startOrder(items)
         }
     }

@@ -8,12 +8,15 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ror.nms2go.ParsedExcel
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.SenderOverview
+import com.ror.nms2go.ui.navigation.AppNavigator
 import com.ror.nms2go.ui.navigation.DestinationArgs
 import com.ror.nms2go.ui.navigation.Destinations
 import com.ror.nms2go.ui.navigation.Nms2GoDrawerContent
@@ -32,9 +35,13 @@ fun Nms2GoApp(
     onDismissParsed: () -> Unit,
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
+    analytics: Analytics,
     orderLoadingProgress: Pair<Int, Int>? = null
 ) {
     val navController = rememberNavController()
+    val appNavigator = remember(navController, analytics) {
+        AppNavigator(navController, analytics)
+    }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route ?: Destinations.OVERVIEW
@@ -72,32 +79,7 @@ fun Nms2GoApp(
             Nms2GoDrawerContent(
                 drawerState = drawerState,
                 currentRoute = currentRoute,
-                onOverviewClick = {
-                    navController.navigate(Destinations.OVERVIEW) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
-                    }
-                },
-                onOrdersClick = {
-                    navController.navigate(Destinations.ORDERS) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onConfigClick = {
-                    navController.navigate(Destinations.CONFIG) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+                onDestinationSelected = appNavigator::navigateFromDrawer
             )
         }
     ) {

@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.AppDatabase
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.ui.Nms2GoApp
@@ -70,7 +71,8 @@ class OrderSendFlowTest {
                 parsedExcel = parsed.value,
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
-                onQuantityChange = { _, _ -> }
+                onQuantityChange = { _, _ -> },
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()
@@ -236,7 +238,8 @@ class OrderSendFlowTest {
                 parsedExcel = parsed.value,
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
-                onQuantityChange = { _, _ -> }
+                onQuantityChange = { _, _ -> },
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

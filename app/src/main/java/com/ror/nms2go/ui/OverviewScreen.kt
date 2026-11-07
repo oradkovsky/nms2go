@@ -32,7 +32,7 @@ import com.ror.nms2go.utils.debugTestTag
 @Composable
 fun OverviewScreen(
     uiModel: OverviewUiModel,
-    onParseItem: (String) -> Unit,
+    onItemClicked: (String) -> Unit,
     onNavigateToConfig: () -> Unit
 ) {
     Column(
@@ -62,7 +62,7 @@ fun OverviewScreen(
             }
 
             else -> {
-                OverviewList(items = uiModel.items, onParseItem = onParseItem)
+                OverviewList(items = uiModel.items, onItemClicked = onItemClicked)
             }
         }
 
@@ -116,14 +116,14 @@ private fun OverviewEmptyState(onNavigateToConfig: () -> Unit) {
 @Composable
 private fun OverviewList(
     items: List<OverviewUiItem>,
-    onParseItem: (String) -> Unit
+    onItemClicked: (String) -> Unit
 ) {
     LazyColumn {
         items(
             items = items,
             key = { it.senderQuery }
         ) { item ->
-            OverviewRow(item = item, onParseItem = onParseItem)
+            OverviewRow(item = item, onItemClicked = onItemClicked)
         }
     }
 }
@@ -131,7 +131,7 @@ private fun OverviewList(
 @Composable
 private fun OverviewRow(
     item: OverviewUiItem,
-    onParseItem: (String) -> Unit
+    onItemClicked: (String) -> Unit
 ) {
     val cardModifier = Modifier
         .fillMaxWidth()
@@ -139,7 +139,7 @@ private fun OverviewRow(
 
     if (item.isParseable) {
         OutlinedCard(
-            onClick = { onParseItem(item.senderQuery) },
+            onClick = { onItemClicked(item.senderQuery) },
             modifier = cardModifier
         ) {
             OverviewRowContent(item)

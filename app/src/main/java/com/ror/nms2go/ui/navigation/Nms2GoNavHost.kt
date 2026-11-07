@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -72,7 +71,7 @@ fun Nms2GoNavHost(
             }
             OverviewScreen(
                 uiModel = overviewUiModel,
-                onParseItem = overviewViewModel::onItemClicked,
+                onItemClicked = overviewViewModel::onItemClicked,
                 onNavigateToConfig = {
                     navController.navigate(Destinations.CONFIG) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -139,7 +138,7 @@ fun Nms2GoNavHost(
             )
         }
         composable(Destinations.PARSED) {
-            val parsedViewModel: ParsedViewModel = viewModel()
+            val parsedViewModel: ParsedViewModel = hiltViewModel()
             val parsedUiState by parsedViewModel.uiState.collectAsState()
             LaunchedEffect(parsedExcel, orderQuantities, loading, orderLoadingProgress) {
                 parsedViewModel.updateData(

@@ -1,5 +1,6 @@
 package com.ror.nms2go.ui
 
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
@@ -21,6 +22,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelTest {
 
+    private data class LoggedEvent(val name: String, val attributes: Map<String, Any?>)
+
     private val sendersFlow = MutableStateFlow<List<SenderEntity>>(emptyList())
 
     @Before
@@ -33,9 +36,12 @@ class OverviewViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(senders: List<SenderEntity> = emptyList()): OverviewViewModel {
+    private fun viewModel(
+        senders: List<SenderEntity> = emptyList(),
+        analytics: Analytics = Analytics { _, _ -> }
+    ): OverviewViewModel {
         sendersFlow.value = senders
-        return OverviewViewModel(SenderRepository(FakeSenderDao(sendersFlow)))
+        return OverviewViewModel(SenderRepository(FakeSenderDao(sendersFlow)), analytics)
     }
 
     @Test
@@ -99,6 +105,60 @@ class OverviewViewModelTest {
         assertFalse(model.showStatus)
         assertTrue(model.items.isEmpty())
     }
+
+    @Test
+    fun onItemClicked_withMatchingItem_logsMatchedEvent() {
+        val events = mutableListOf<LoggedEvent>()
+        val viewModel = viewModel(
+            analytics = Analytics { name, params ->
+                events += LoggedEvent(name, params.toMap())
+            }
+        )
+        viewModel.updateData(
+            loading = false,
+            statusText = "",
+            overviewResults = listOf(foundOverview("orders@acme.example"))
+        )
+
+        viewModel.onItemClicked("orders@acme.example")
+
+        val event = events.single()
+        assertEquals("ev_overview_order_single", event.name)
+        assertEquals(true, event.attributes["matched"])
+        assertEquals("orders@acme.example", event.attributes["query"])
+    }
+
+    @Test
+    fun onItemClicked_withoutMatchingItem_logsUnmatchedEvent() {
+        val events = mutableListOf<LoggedEvent>()
+        val viewModel = viewModel(
+            analytics = Analytics { name, params ->
+                events += LoggedEvent(name, params.toMap())
+            }
+        )
+        viewModel.updateData(
+            loading = false,
+            statusText = "",
+            overviewResults = listOf(foundOverview("orders@acme.example"))
+        )
+
+        viewModel.onItemClicked("missing@acme.example")
+
+        val event = events.single()
+        assertEquals("ev_overview_order_single", event.name)
+        assertEquals(false, event.attributes["matched"])
+        assertEquals("missing@acme.example", event.attributes["query"])
+    }
+
+    private fun foundOverview(senderQuery: String) = SenderOverview(
+        senderQuery = senderQuery,
+        messageId = "message-1",
+        subject = "Price list",
+        from = "Acme",
+        date = "15.01.2026 10:00",
+        hasAttachment = true,
+        status = SenderOverview.Status.FOUND
+    )
 
     private class FakeSenderDao(
         private val flow: MutableStateFlow<List<SenderEntity>>

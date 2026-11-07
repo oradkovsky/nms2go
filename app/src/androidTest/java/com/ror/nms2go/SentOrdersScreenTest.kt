@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.AppDatabase
 import com.ror.nms2go.data.OrderDao
 import com.ror.nms2go.data.OrderItemEntity
@@ -110,7 +111,8 @@ class SentOrdersScreenTest {
                 parsedExcel = null,
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
-                onQuantityChange = { _, _ -> }
+                onQuantityChange = { _, _ -> },
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

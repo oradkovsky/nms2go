@@ -1,0 +1,52 @@
+package com.ror.nms2go.analytics
+
+/**
+ * Single source of truth for analytics event names and their attribute keys.
+ *
+ * Every event exposes its name and nests all supported attributes beneath it,
+ * so call sites never hardcode analytics strings.
+ */
+object AnalyticsEvents {
+
+    object NavDrawer {
+        const val EVENT_NAME = "ev_nav_drawer"
+
+        object Attributes {
+            const val NAME = "name"
+        }
+    }
+
+    object OverviewOrderAll {
+        const val EVENT_NAME = "ev_overview_order_all"
+
+        object Attributes {
+            const val ITEMS_COUNT = "items_count"
+        }
+    }
+
+    object OverviewOrderSingle {
+        const val EVENT_NAME = "ev_overview_order_single"
+
+        object Attributes {
+            const val MATCHED = "matched"
+            const val QUERY = "query"
+        }
+    }
+
+    object CompareNOrderFilter {
+        const val EVENT_NAME = "ev_compare_n_order_filter"
+
+        object Attributes {
+            const val QUERY = "query"
+        }
+    }
+
+    object ReviewPlacing {
+        const val EVENT_NAME = "ev_review_placing"
+
+        object Attributes {
+            const val CHOSEN_SIZE = "chosen_size"
+            const val SUCCESS = "success"
+        }
+    }
+}

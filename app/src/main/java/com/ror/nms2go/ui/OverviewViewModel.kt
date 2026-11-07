@@ -2,6 +2,8 @@ package com.ror.nms2go.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ror.nms2go.analytics.Analytics
+import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.SenderRepository
@@ -53,7 +55,8 @@ enum class OverviewUiItemStatus {
 
 @HiltViewModel
 class OverviewViewModel @Inject constructor(
-    private val senderRepository: SenderRepository
+    private val senderRepository: SenderRepository,
+    private val analytics: Analytics
 ) : ViewModel() {
 
     private val _uiModel = MutableStateFlow(OverviewUiModel())
@@ -93,9 +96,15 @@ class OverviewViewModel @Inject constructor(
     }
 
     fun onItemClicked(senderQuery: String) {
-        overviewResults.firstOrNull {
+        val match = overviewResults.firstOrNull {
             it.senderQuery == senderQuery && it.status == SenderOverview.Status.FOUND
-        }?.let(_parseItemRequests::tryEmit)
+        }
+        match?.let(_parseItemRequests::tryEmit)
+        analytics.logEvent(
+            AnalyticsEvents.OverviewOrderSingle.EVENT_NAME,
+            AnalyticsEvents.OverviewOrderSingle.Attributes.MATCHED to (match != null),
+            AnalyticsEvents.OverviewOrderSingle.Attributes.QUERY to senderQuery
+        )
     }
 
     private fun rebuild() {

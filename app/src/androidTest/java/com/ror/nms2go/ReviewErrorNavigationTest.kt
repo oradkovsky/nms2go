@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.ui.Nms2GoApp
 import com.ror.nms2go.ui.ORDER_BUTTON_TAG
@@ -79,7 +80,8 @@ class ReviewErrorNavigationTest {
                 ),
                 onDismissParsed = {},
                 orderQuantities = mapOf(0 to 2),
-                onQuantityChange = { _, _ -> }
+                onQuantityChange = { _, _ -> },
+                analytics = Analytics { _, _ -> }
             )
         }
         rule.waitForIdle()

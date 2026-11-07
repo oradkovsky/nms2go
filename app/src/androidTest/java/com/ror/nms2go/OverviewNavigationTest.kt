@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.ui.Nms2GoApp
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -50,7 +51,8 @@ class OverviewNavigationTest {
                 parsedExcel = null,
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
-                onQuantityChange = { _, _ -> }
+                onQuantityChange = { _, _ -> },
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()
