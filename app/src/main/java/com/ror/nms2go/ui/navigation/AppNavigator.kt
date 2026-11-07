@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.analytics.AnalyticsEvent
+import com.ror.nms2go.analytics.AnalyticsEvents
 
 enum class DrawerDestination(
     val analyticsName: String,
@@ -21,7 +22,10 @@ class AppNavigator(
 ) {
     fun navigateFromDrawer(destination: DrawerDestination) {
         analytics.logEvent(
-            AnalyticsEvent(EVENT_NAV_DRAWER, ATTR_NAME to destination.analyticsName)
+            AnalyticsEvent(
+                AnalyticsEvents.NavDrawer.EVENT_NAME,
+                AnalyticsEvents.NavDrawer.Attributes.NAME to destination.analyticsName
+            )
         )
 
         navController.navigate(destination.route) {
@@ -37,10 +41,5 @@ class AppNavigator(
             }
             launchSingleTop = true
         }
-    }
-
-    private companion object {
-        const val EVENT_NAV_DRAWER = "ev_nav_drawer"
-        const val ATTR_NAME = "name"
     }
 }

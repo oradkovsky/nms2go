@@ -9,6 +9,7 @@ import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.analytics.AnalyticsEvent
+import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.data.GmailAuthManager
@@ -146,7 +147,10 @@ class OrderWorkflowViewModel @Inject constructor(
                     OrderItem(overview, sender?.parser.orEmpty(), sender)
                 }
             analytics.logEvent(
-                AnalyticsEvent(EVENT_OVERVIEW_ORDER_ALL, ATTR_ITEMS_COUNT to items.size)
+                AnalyticsEvent(
+                    AnalyticsEvents.OverviewOrderAll.EVENT_NAME,
+                    AnalyticsEvents.OverviewOrderAll.Attributes.ITEMS_COUNT to items.size
+                )
             )
             startOrder(items)
         }
@@ -377,7 +381,5 @@ class OrderWorkflowViewModel @Inject constructor(
     private companion object {
         const val TAG = "OrderWorkflowViewModel"
         const val FIRST_RESULT_DISPLAY_MILLIS = 900L
-        const val EVENT_OVERVIEW_ORDER_ALL = "ev_overview_order_all"
-        const val ATTR_ITEMS_COUNT = "items_count"
     }
 }
