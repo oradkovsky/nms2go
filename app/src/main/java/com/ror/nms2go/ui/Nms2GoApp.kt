@@ -13,12 +13,17 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ror.nms2go.ParsedExcel
+import com.ror.nms2go.analytics.Analytics
+import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.data.SenderOverview
 import com.ror.nms2go.ui.navigation.DestinationArgs
 import com.ror.nms2go.ui.navigation.Destinations
 import com.ror.nms2go.ui.navigation.Nms2GoDrawerContent
 import com.ror.nms2go.ui.navigation.Nms2GoNavHost
 import com.ror.nms2go.ui.navigation.Nms2GoTopBar
+
+private const val EVENT_NAV_DRAWER = "ev_nav_drawer"
+private const val ATTR_NAME = "name"
 
 @Composable
 fun Nms2GoApp(
@@ -32,6 +37,7 @@ fun Nms2GoApp(
     onDismissParsed: () -> Unit,
     orderQuantities: Map<Int, Int>,
     onQuantityChange: (index: Int, quantity: Int) -> Unit,
+    analytics: Analytics,
     orderLoadingProgress: Pair<Int, Int>? = null
 ) {
     val navController = rememberNavController()
@@ -73,6 +79,9 @@ fun Nms2GoApp(
                 drawerState = drawerState,
                 currentRoute = currentRoute,
                 onOverviewClick = {
+                    analytics.logEvent(
+                        AnalyticsEvent(EVENT_NAV_DRAWER, ATTR_NAME to "overview")
+                    )
                     navController.navigate(Destinations.OVERVIEW) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             inclusive = true
@@ -81,6 +90,9 @@ fun Nms2GoApp(
                     }
                 },
                 onOrdersClick = {
+                    analytics.logEvent(
+                        AnalyticsEvent(EVENT_NAV_DRAWER, ATTR_NAME to "sent")
+                    )
                     navController.navigate(Destinations.ORDERS) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
@@ -90,6 +102,9 @@ fun Nms2GoApp(
                     }
                 },
                 onConfigClick = {
+                    analytics.logEvent(
+                        AnalyticsEvent(EVENT_NAV_DRAWER, ATTR_NAME to "configuration")
+                    )
                     navController.navigate(Destinations.CONFIG) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true

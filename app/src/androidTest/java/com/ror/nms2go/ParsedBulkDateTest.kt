@@ -19,6 +19,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.ui.ParsedScreen
 import com.ror.nms2go.ui.ParsedViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -271,6 +272,7 @@ class ParsedBulkDateTest {
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
+                analytics = Analytics {},
                 orderLoadingProgress = 1 to 2
             )
         }

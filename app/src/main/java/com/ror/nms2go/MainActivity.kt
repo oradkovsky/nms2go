@@ -16,6 +16,7 @@ import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.ui.OrderWorkflowViewModel
@@ -31,6 +32,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var authManager: GmailAuthManager
+
+    @Inject
+    lateinit var analytics: Analytics
 
     private val authorizationLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
@@ -109,6 +113,7 @@ class MainActivity : ComponentActivity() {
                     onDismissParsed = workflowViewModel::dismissParsed,
                     orderQuantities = workflow.orderQuantities,
                     onQuantityChange = workflowViewModel::onQuantityChange,
+                    analytics = analytics,
                     orderLoadingProgress = workflow.orderLoadingProgress
                 )
             }
