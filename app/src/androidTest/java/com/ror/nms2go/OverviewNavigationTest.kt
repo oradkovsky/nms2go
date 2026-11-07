@@ -52,7 +52,7 @@ class OverviewNavigationTest {
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
-                analytics = Analytics {}
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

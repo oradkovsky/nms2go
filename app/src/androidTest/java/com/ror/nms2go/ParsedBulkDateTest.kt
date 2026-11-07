@@ -40,7 +40,7 @@ private fun TestParsedScreenWithViewModel(
     isLoading: Boolean = false,
     orderLoadingProgress: Pair<Int, Int>? = null,
 ) {
-    val vm = remember { ParsedViewModel(SavedStateHandle(), Analytics {}, Dispatchers.IO) }
+    val vm = remember { ParsedViewModel(SavedStateHandle(), Analytics { _, _ -> }, Dispatchers.IO) }
     val uiState by vm.uiState.collectAsState()
     LaunchedEffect(parsed, quantities, isLoading, orderLoadingProgress) {
         vm.updateData(parsed, quantities, isLoading, orderLoadingProgress)
@@ -273,7 +273,7 @@ class ParsedBulkDateTest {
                 onDismissParsed = {},
                 orderQuantities = emptyMap(),
                 onQuantityChange = { _, _ -> },
-                analytics = Analytics {},
+                analytics = Analytics { _, _ -> },
                 orderLoadingProgress = 1 to 2
             )
         }

@@ -90,7 +90,7 @@ class ReviewSendingStatesTest {
         authManager = authManager,
         context = appContext,
         ioDispatcher = Dispatchers.Unconfined,
-        analytics = Analytics {}
+        analytics = Analytics { _, _ -> }
     )
 
     private val appContext: Context

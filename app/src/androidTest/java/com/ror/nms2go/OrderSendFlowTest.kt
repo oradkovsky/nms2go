@@ -72,7 +72,7 @@ class OrderSendFlowTest {
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                analytics = Analytics {}
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()
@@ -239,7 +239,7 @@ class OrderSendFlowTest {
                 onDismissParsed = { parsed.value = null },
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                analytics = Analytics {}
+                analytics = Analytics { _, _ -> }
             )
         }
         TestVisuals.afterSetContent()

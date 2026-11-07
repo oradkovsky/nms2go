@@ -3,7 +3,6 @@ package com.ror.nms2go.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
@@ -102,11 +101,9 @@ class OverviewViewModel @Inject constructor(
         }
         match?.let(_parseItemRequests::tryEmit)
         analytics.logEvent(
-            AnalyticsEvent(
-                AnalyticsEvents.OverviewOrderSingle.EVENT_NAME,
-                AnalyticsEvents.OverviewOrderSingle.Attributes.MATCHED to (match != null),
-                AnalyticsEvents.OverviewOrderSingle.Attributes.QUERY to senderQuery
-            )
+            AnalyticsEvents.OverviewOrderSingle.EVENT_NAME,
+            AnalyticsEvents.OverviewOrderSingle.Attributes.MATCHED to (match != null),
+            AnalyticsEvents.OverviewOrderSingle.Attributes.QUERY to senderQuery
         )
     }
 

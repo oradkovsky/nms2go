@@ -1,7 +1,6 @@
 package com.ror.nms2go.ui
 
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.data.SenderDao
 import com.ror.nms2go.data.SenderEntity
 import com.ror.nms2go.data.SenderOverview
@@ -23,6 +22,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelTest {
 
+    private data class LoggedEvent(val name: String, val attributes: Map<String, Any?>)
+
     private val sendersFlow = MutableStateFlow<List<SenderEntity>>(emptyList())
 
     @Before
@@ -37,7 +38,7 @@ class OverviewViewModelTest {
 
     private fun viewModel(
         senders: List<SenderEntity> = emptyList(),
-        analytics: Analytics = Analytics {}
+        analytics: Analytics = Analytics { _, _ -> }
     ): OverviewViewModel {
         sendersFlow.value = senders
         return OverviewViewModel(SenderRepository(FakeSenderDao(sendersFlow)), analytics)
@@ -107,8 +108,12 @@ class OverviewViewModelTest {
 
     @Test
     fun onItemClicked_withMatchingItem_logsMatchedEvent() {
-        val events = mutableListOf<AnalyticsEvent>()
-        val viewModel = viewModel(analytics = Analytics { events += it })
+        val events = mutableListOf<LoggedEvent>()
+        val viewModel = viewModel(
+            analytics = Analytics { name, params ->
+                events += LoggedEvent(name, params.toMap())
+            }
+        )
         viewModel.updateData(
             loading = false,
             statusText = "",
@@ -125,8 +130,12 @@ class OverviewViewModelTest {
 
     @Test
     fun onItemClicked_withoutMatchingItem_logsUnmatchedEvent() {
-        val events = mutableListOf<AnalyticsEvent>()
-        val viewModel = viewModel(analytics = Analytics { events += it })
+        val events = mutableListOf<LoggedEvent>()
+        val viewModel = viewModel(
+            analytics = Analytics { name, params ->
+                events += LoggedEvent(name, params.toMap())
+            }
+        )
         viewModel.updateData(
             loading = false,
             statusText = "",

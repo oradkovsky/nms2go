@@ -17,9 +17,10 @@ class FirebaseAnalyticsTracker @Inject constructor(
         FirebaseAnalytics.getInstance(context)
     }
 
-    override fun logEvent(event: AnalyticsEvent) {
-        AppLog.d(TAG, "${event.name} ${event.attributes}")
-        firebaseAnalytics.logEvent(event.name, event.attributes.toBundle())
+    override fun logEvent(name: String, vararg params: Pair<String, Any?>) {
+        val attributes = params.toMap()
+        AppLog.d(TAG, "$name $attributes")
+        firebaseAnalytics.logEvent(name, attributes.toBundle())
     }
 
     private companion object {

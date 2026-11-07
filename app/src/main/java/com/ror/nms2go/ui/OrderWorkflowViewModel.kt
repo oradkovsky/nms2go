@@ -8,7 +8,6 @@ import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.utils.AppLog
 import com.ror.nms2go.data.SenderOverview
@@ -147,10 +146,8 @@ class OrderWorkflowViewModel @Inject constructor(
                     OrderItem(overview, sender?.parser.orEmpty(), sender)
                 }
             analytics.logEvent(
-                AnalyticsEvent(
-                    AnalyticsEvents.OverviewOrderAll.EVENT_NAME,
-                    AnalyticsEvents.OverviewOrderAll.Attributes.ITEMS_COUNT to items.size
-                )
+                AnalyticsEvents.OverviewOrderAll.EVENT_NAME,
+                AnalyticsEvents.OverviewOrderAll.Attributes.ITEMS_COUNT to items.size
             )
             startOrder(items)
         }

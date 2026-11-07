@@ -3,7 +3,6 @@ package com.ror.nms2go.ui.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.analytics.AnalyticsEvents
 
 enum class DrawerDestination(
@@ -22,10 +21,8 @@ class AppNavigator(
 ) {
     fun navigateFromDrawer(destination: DrawerDestination) {
         analytics.logEvent(
-            AnalyticsEvent(
-                AnalyticsEvents.NavDrawer.EVENT_NAME,
-                AnalyticsEvents.NavDrawer.Attributes.NAME to destination.analyticsName
-            )
+            AnalyticsEvents.NavDrawer.EVENT_NAME,
+            AnalyticsEvents.NavDrawer.Attributes.NAME to destination.analyticsName
         )
 
         navController.navigate(destination.route) {

@@ -81,7 +81,7 @@ class ReviewErrorNavigationTest {
                 onDismissParsed = {},
                 orderQuantities = mapOf(0 to 2),
                 onQuantityChange = { _, _ -> },
-                analytics = Analytics {}
+                analytics = Analytics { _, _ -> }
             )
         }
         rule.waitForIdle()

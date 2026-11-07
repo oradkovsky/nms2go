@@ -7,7 +7,6 @@ import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.data.GmailAuthResult
@@ -355,11 +354,9 @@ class ReviewViewModel @AssistedInject constructor(
 
     private fun logReviewPlacing(chosenSize: Int, success: Boolean) {
         analytics.logEvent(
-            AnalyticsEvent(
-                AnalyticsEvents.ReviewPlacing.EVENT_NAME,
-                AnalyticsEvents.ReviewPlacing.Attributes.CHOSEN_SIZE to chosenSize,
-                AnalyticsEvents.ReviewPlacing.Attributes.SUCCESS to success
-            )
+            AnalyticsEvents.ReviewPlacing.EVENT_NAME,
+            AnalyticsEvents.ReviewPlacing.Attributes.CHOSEN_SIZE to chosenSize,
+            AnalyticsEvents.ReviewPlacing.Attributes.SUCCESS to success
         )
     }
 

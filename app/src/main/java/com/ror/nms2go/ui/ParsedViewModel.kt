@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.analytics.Analytics
-import com.ror.nms2go.analytics.AnalyticsEvent
 import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.di.IoDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -144,10 +143,8 @@ class ParsedViewModel @Inject constructor(
         filterAnalyticsJob = viewModelScope.launch(ioDispatcher) {
             delay(FILTER_ANALYTICS_DEBOUNCE_MILLIS)
             analytics.logEvent(
-                AnalyticsEvent(
-                    AnalyticsEvents.CompareNOrderFilter.EVENT_NAME,
-                    AnalyticsEvents.CompareNOrderFilter.Attributes.QUERY to query
-                )
+                AnalyticsEvents.CompareNOrderFilter.EVENT_NAME,
+                AnalyticsEvents.CompareNOrderFilter.Attributes.QUERY to query
             )
         }
     }
