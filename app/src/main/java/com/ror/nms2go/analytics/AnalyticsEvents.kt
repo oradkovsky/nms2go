@@ -32,4 +32,12 @@ object AnalyticsEvents {
             const val QUERY = "query"
         }
     }
+
+    object CompareNOrderFilter {
+        const val EVENT_NAME = "ev_compare_n_order_filter"
+
+        object Attributes {
+            const val QUERY = "query"
+        }
+    }
 }

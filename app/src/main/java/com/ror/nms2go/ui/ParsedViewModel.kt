@@ -2,14 +2,25 @@ package com.ror.nms2go.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
+import com.ror.nms2go.analytics.Analytics
+import com.ror.nms2go.analytics.AnalyticsEvent
+import com.ror.nms2go.analytics.AnalyticsEvents
+import com.ror.nms2go.di.IoDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 sealed interface ParsedUiState {
     data object Idle : ParsedUiState
@@ -28,8 +39,11 @@ sealed interface ParsedUiState {
     ) : ParsedUiState
 }
 
-class ParsedViewModel(
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+@HiltViewModel
+class ParsedViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val analytics: Analytics,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _parsed = MutableStateFlow<ParsedExcel?>(null)
@@ -42,6 +56,8 @@ class ParsedViewModel(
 
     private val _quantityChangeEvent = MutableSharedFlow<Pair<Int, Int>>(extraBufferCapacity = 1)
     val quantityChangeEvent: SharedFlow<Pair<Int, Int>> = _quantityChangeEvent.asSharedFlow()
+
+    private var filterAnalyticsJob: Job? = null
 
     private val _uiState = MutableStateFlow<ParsedUiState>(ParsedUiState.Idle)
     val uiState: StateFlow<ParsedUiState> = _uiState.asStateFlow()
@@ -115,11 +131,25 @@ class ParsedViewModel(
     }
 
     fun onQueryChange(newQuery: String) {
+        scheduleFilterAnalytics(newQuery)
         _query.value = newQuery
         _page.value = 0
         savedStateHandle["query"] = newQuery
         savedStateHandle["page"] = 0
         updateDerivedState()
+    }
+
+    private fun scheduleFilterAnalytics(query: String) {
+        filterAnalyticsJob?.cancel()
+        filterAnalyticsJob = viewModelScope.launch(ioDispatcher) {
+            delay(FILTER_ANALYTICS_DEBOUNCE_MILLIS)
+            analytics.logEvent(
+                AnalyticsEvent(
+                    AnalyticsEvents.CompareNOrderFilter.EVENT_NAME,
+                    AnalyticsEvents.CompareNOrderFilter.Attributes.QUERY to query
+                )
+            )
+        }
     }
 
     fun onClearQuery() {
@@ -140,5 +170,9 @@ class ParsedViewModel(
         newMap[index] = coerced
         _quantities.value = newMap
         updateDerivedState()
+    }
+
+    private companion object {
+        const val FILTER_ANALYTICS_DEBOUNCE_MILLIS = 200L
     }
 }

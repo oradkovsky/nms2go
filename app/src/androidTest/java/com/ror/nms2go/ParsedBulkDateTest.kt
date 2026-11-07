@@ -24,6 +24,7 @@ import com.ror.nms2go.ui.ParsedScreen
 import com.ror.nms2go.ui.ParsedViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,7 +40,7 @@ private fun TestParsedScreenWithViewModel(
     isLoading: Boolean = false,
     orderLoadingProgress: Pair<Int, Int>? = null,
 ) {
-    val vm = remember { ParsedViewModel(SavedStateHandle()) }
+    val vm = remember { ParsedViewModel(SavedStateHandle(), Analytics {}, Dispatchers.IO) }
     val uiState by vm.uiState.collectAsState()
     LaunchedEffect(parsed, quantities, isLoading, orderLoadingProgress) {
         vm.updateData(parsed, quantities, isLoading, orderLoadingProgress)
