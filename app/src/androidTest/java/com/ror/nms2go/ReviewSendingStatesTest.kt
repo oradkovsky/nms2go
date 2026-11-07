@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
+import com.ror.nms2go.analytics.Analytics
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.data.GmailSender
 import com.ror.nms2go.data.OrderHistoryRepository
@@ -88,7 +89,8 @@ class ReviewSendingStatesTest {
         orderHistoryRepository = orderHistoryRepository,
         authManager = authManager,
         context = appContext,
-        ioDispatcher = Dispatchers.Unconfined
+        ioDispatcher = Dispatchers.Unconfined,
+        analytics = Analytics {}
     )
 
     private val appContext: Context

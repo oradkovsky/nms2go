@@ -40,4 +40,13 @@ object AnalyticsEvents {
             const val QUERY = "query"
         }
     }
+
+    object ReviewPlacing {
+        const val EVENT_NAME = "ev_review_placing"
+
+        object Attributes {
+            const val CHOSEN_SIZE = "chosen_size"
+            const val SUCCESS = "success"
+        }
+    }
 }

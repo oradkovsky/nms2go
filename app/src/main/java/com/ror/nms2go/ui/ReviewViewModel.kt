@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.ror.nms2go.ExcelRow
 import com.ror.nms2go.ParsedExcel
 import com.ror.nms2go.R
+import com.ror.nms2go.analytics.Analytics
+import com.ror.nms2go.analytics.AnalyticsEvent
+import com.ror.nms2go.analytics.AnalyticsEvents
 import com.ror.nms2go.data.GmailAuthManager
 import com.ror.nms2go.data.GmailAuthResult
 import com.ror.nms2go.data.GmailSender
@@ -60,7 +63,8 @@ class ReviewViewModel @AssistedInject constructor(
     private val orderHistoryRepository: OrderHistoryRepository,
     private val authManager: GmailAuthManager,
     @ApplicationContext private val context: Context,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val analytics: Analytics
 ) : ViewModel() {
 
     private val _parsed = MutableStateFlow(parsed)
@@ -259,6 +263,7 @@ class ReviewViewModel @AssistedInject constructor(
             } else {
                 context.getString(R.string.order_errors_prefix, errors.joinToString("; "))
             }
+            logReviewPlacing(chosen.size, success = errors.isEmpty())
             if (sent.isEmpty()) {
                 showError(errorNote)
             } else {
@@ -268,6 +273,7 @@ class ReviewViewModel @AssistedInject constructor(
             }
         } catch (error: Exception) {
             error.rethrowIfCancellation()
+            logReviewPlacing(chosen.size, success = false)
             AppLog.w(TAG, "Order sending failed", error)
             showError(
                 context.getString(
@@ -346,6 +352,16 @@ class ReviewViewModel @AssistedInject constructor(
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
         .replace("'", "&#39;")
+
+    private fun logReviewPlacing(chosenSize: Int, success: Boolean) {
+        analytics.logEvent(
+            AnalyticsEvent(
+                AnalyticsEvents.ReviewPlacing.EVENT_NAME,
+                AnalyticsEvents.ReviewPlacing.Attributes.CHOSEN_SIZE to chosenSize,
+                AnalyticsEvents.ReviewPlacing.Attributes.SUCCESS to success
+            )
+        )
+    }
 
     private fun Exception.rethrowIfCancellation() {
         if (this is CancellationException) throw this
