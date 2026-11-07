@@ -72,7 +72,7 @@ fun Nms2GoNavHost(
             }
             OverviewScreen(
                 uiModel = overviewUiModel,
-                onParseItem = overviewViewModel::onItemClicked,
+                onItemClicked = overviewViewModel::onItemClicked,
                 onNavigateToConfig = {
                     navController.navigate(Destinations.CONFIG) {
                         popUpTo(navController.graph.findStartDestination().id) {

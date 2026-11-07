@@ -23,4 +23,13 @@ object AnalyticsEvents {
             const val ITEMS_COUNT = "items_count"
         }
     }
+
+    object OverviewOrderSingle {
+        const val EVENT_NAME = "ev_overview_order_single"
+
+        object Attributes {
+            const val MATCHED = "matched"
+            const val QUERY = "query"
+        }
+    }
 }
